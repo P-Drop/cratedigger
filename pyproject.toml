@@ -8,10 +8,12 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "django>=5.2,<6",
+    "django-environ>=0.14.0",
 ]
 
 [dependency-groups]
 dev = [
+    "detect-secrets>=1.5.0",
     "django-stubs[compatible-mypy]>=6.1.1",
     "factory-boy>=3.3.3",
     "mypy>=2.3.1",
@@ -69,6 +71,10 @@ strict = true
 
 plugins = ["mypy_django_plugin.main"]
 exclude = ["migrations/"]
+
+[[tool.mypy.overrides]]
+module = ["environ.*"]
+ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "config.settings"
