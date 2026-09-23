@@ -24,6 +24,9 @@ dev = [
     "ruff>=0.16.8",
 ]
 
+# -------------
+# Ruff
+
 [tool.ruff]
 # Ajusta longitud de linea a 88 caracteres
 line-length = 88
@@ -64,6 +67,8 @@ ignore = [
 # Activa el formateo del código de ejemplo en docstrings
 docstring-code-format = true
 
+# -------------
+# Mypy
 
 [tool.mypy]
 # Modo tipado estricto
@@ -78,3 +83,39 @@ ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "config.settings"
+
+# -------------
+# Pytest
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+pythonpath = ["."]
+addopts = [
+    "--strict-markers",
+    "--import-mode=importlib",
+    "-ra",
+    # configuracion de cobertura temporal, despues ira solo en CI
+    "--cov",
+    "--cov-report=html",
+    "--cov-fail-under=85",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit =[
+    "*/migrations/*",
+    "*tests/*",
+    "manage.py",
+    "config/asgi.py",
+    "config/wsgi.py",
+    "*/venv/*",
+]
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+exclude_lines =[
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
