@@ -21,3 +21,43 @@ dev = [
     "pytest-django>=4.14.0",
     "ruff>=0.16.8",
 ]
+
+[tool.ruff]
+# Ajusta longitud de linea a 88 caracteres
+line-length = 88
+
+# Añado a los directorios excluidos por defecto (.venv, .git, ...)
+# el directorio de migraciones.
+# Excluir la configuración local de claude (.claude) es redundante
+# porque ruff respeta .gitignore.
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",    # pycodestyle
+    "F",         # pyflakes: imports y variables sin usar, nombres indefinidos
+    "I",         # isort: orden de imports
+    "UP",        # pyupgrade: sintaxis moderna según la version de Python
+    "B",         # flake8-bugbear: bugs probables y malos patrones
+    "SIM",       # simplificaciones de codigo
+    "C4",        # comprehensions mas limpias
+    "N",         # pep8-naming
+    "PTH",       # pathlib en lugar de os.path
+    "DTZ",       # datetimes con zona horaria
+    "DJ",        # reglas especificas de Django
+    "S",         # flake8-bandit: seguridad
+    "T20",       # print / pprint
+    "RUF"        # reglas propias de Ruff
+]
+
+ignore = [
+    "E501",    # longitud de linea gestionada por el formateador
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101"]    # assert permitido en tests
+"**/tests.py" = ["S101"]
+
+[tool.ruff.format]
+# Activa el formateo del código de ejemplo en docstrings
+docstring-code-format = true
