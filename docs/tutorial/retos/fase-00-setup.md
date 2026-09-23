@@ -95,16 +95,39 @@ Lectura recomendada antes de escribirlo:
 
 ## Criterios de aceptación
 
-- [ ] Un clon limpio del repo se instala con `uv sync --locked` sin errores.
-- [ ] `uv run python manage.py check` no muestra problemas y `runserver` arranca.
-- [ ] `uv run pre-commit run --all-files` pasa sin errores.
-- [ ] `uv run mypy .` pasa en modo strict.
-- [ ] `uv run pytest` pasa y muestra el informe de cobertura.
-- [ ] **Demostración 1:** un commit con el mensaje `arreglos varios` es rechazado por el hook. Pega la salida en el chat.
-- [ ] **Demostración 2:** un archivo con una credencial falsa pero de formato realista, inventada por ti, es bloqueado por el escaneo de secretos. Pega la salida y **no lo commitees**.
-- [ ] En el repo no hay `.env`, `.venv/`, `__pycache__/`, `db.sqlite3`, `.coverage` ni `.claude/settings.local.json`.
-- [ ] El repo es público en GitHub y tiene el README y el ADR-0001.
-- [ ] El historial está formado por commits atómicos y convencionales.
+- [x] Un clon limpio del repo se instala con `uv sync --locked` sin errores.
+- [x] `uv run python manage.py check` no muestra problemas y `runserver` arranca.
+- [x] `uv run pre-commit run --all-files` pasa sin errores.
+- [x] `uv run mypy .` pasa en modo strict.
+- [x] `uv run pytest` pasa y muestra el informe de cobertura.
+- [x] **Demostración 1:** un commit con el mensaje `arreglos varios` es rechazado por el hook. Pega la salida en el chat.
+
+```bash
+[Bad commit message] >> arreglos varios
+Your commit message does not follow Conventional Commits formatting
+https://www.conventionalcommits.org/
+
+```
+
+- [x] **Demostración 2:** un archivo con una credencial falsa pero de formato realista, inventada por ti, es bloqueado por el escaneo de secretos. Pega la salida y **no lo commitees**.
+
+```bash
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: AWS Access Key
+Location:    config/settings.py:20
+
+Secret Type: Base64 High Entropy String
+Location:    config/settings.py:20
+
+Secret Type: Secret Keyword
+Location:    config/settings.py:20
+
+```
+
+- [x] En el repo no hay `.env`, `.venv/`, `__pycache__/`, `db.sqlite3`, `.coverage` ni `.claude/settings.local.json`.
+- [x] El repo es público en GitHub y tiene el README y el ADR-0001.
+- [x] El historial está formado por commits atómicos y convencionales.
 
 ## Preguntas de diseño
 
