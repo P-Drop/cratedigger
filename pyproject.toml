@@ -12,7 +12,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "django-stubs>=6.1.1",
+    "django-stubs[compatible-mypy]>=6.1.1",
     "factory-boy>=3.3.3",
     "mypy>=2.3.1",
     "pre-commit>=4.6.2",
@@ -61,3 +61,14 @@ ignore = [
 [tool.ruff.format]
 # Activa el formateo del código de ejemplo en docstrings
 docstring-code-format = true
+
+
+[tool.mypy]
+# Modo tipado estricto
+strict = true
+
+plugins = ["mypy_django_plugin.main"]
+exclude = ["migrations/"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings"

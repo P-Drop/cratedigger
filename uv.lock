@@ -191,7 +191,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "django-stubs" },
+    { name = "django-stubs", extra = ["compatible-mypy"] },
     { name = "factory-boy" },
     { name = "mypy" },
     { name = "pre-commit" },
@@ -206,7 +206,7 @@ requires-dist = [{ name = "django", specifier = ">=5.2,<6" }]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "django-stubs", specifier = ">=6.1.1" },
+    { name = "django-stubs", extras = ["compatible-mypy"], specifier = ">=6.1.1" },
     { name = "factory-boy", specifier = ">=3.3.3" },
     { name = "mypy", specifier = ">=2.3.1" },
     { name = "pre-commit", specifier = ">=4.6.2" },
@@ -252,6 +252,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2b/d6/fb467f5f769b831680d8cb6705e4bbec335c79b328ff7e347e220e676da8/django_stubs-6.1.1.tar.gz", hash = "sha256:291fd79197416d191ec9f4e443bc6800b64dd5d41e476b91e679495d005f3d61", size = 295523, upload-time = "2026-09-14T08:46:24.686Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9d/26/911e381b1cee7fbb7f11f640ec4be4ec1b6ae49dc58ff2cb829cf12dc4b9/django_stubs-6.1.1-py3-none-any.whl", hash = "sha256:a913d0c35242cd820f638486118fd542d687b6a85104bea9cb7e635b52b889e3", size = 559401, upload-time = "2026-09-14T08:46:23.153Z" },
+]
+
+[package.optional-dependencies]
+compatible-mypy = [
+    { name = "mypy" },
 ]
 
 [[package]]
