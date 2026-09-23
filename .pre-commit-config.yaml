@@ -1,5 +1,6 @@
 default_install_hook_types:
   - pre-commit
+  - commit-msg
   - post-checkout
   - post-merge
   - post-rewrite
@@ -47,3 +48,10 @@ repos:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
         exclude: uv.lock
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stage: [commit-msg]
+        args: [build, chore, ci, docs, feat, fix, learn, perf, refactor, revert, style, test]
