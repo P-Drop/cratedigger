@@ -134,10 +134,64 @@ Location:    config/settings.py:20
 Respóndelas en el ADR, en el README o en el chat cuando pidas la review:
 
 1. ¿Qué reglas de ruff activaste y por qué? ¿Ignoraste alguna?
+
+Activo las reglas de ruff linter recomendadas que respentan el estilo PEP8 y mantienen un código limpio y legible:
+
+- Longitud de línea de 88 caracteres.
+- pycodestyle (reglas E y W).
+- pyflakes (relga F).
+- isort (regla I).
+- pyupdate (regla UP)
+- flake8-bugbear (regla B).
+- Simplificaciones de código (regla SIM).
+- Comprehensions limpias (regla C4).
+- Naming de PEP8 (regla N).
+- flake8-use-pathlib: pathlib en lugar de os.path (regla PTH).
+- flake8-datetimez: utilizar datetimes con zona horaria (regla DTZ).
+- flake8-django: específicaciones Django (regla DJ).
+- flake8-bandit: seguridad (regla S).
+- Detectar print / pprint (regla T20).
+- Reglas propias Ruff (regla RUF).
+
+Para el formatter de ruff:
+
+- Activo el formateo del código de ejemplo en docstrings de funciones.
+
+Ignoro la siguiente regla para todo el código fuente:
+
+- E501: longitud de línea. La longitud de línea ya está definida y gestionada por otra regla.
+
+También ignoro la siguiente regla para la suite de tests:
+
+- S101: uso de assert. Se desactiva para permitir asserts solo en tests.
+
+---
+
 2. ¿Por qué mypy como hook local con uv y no con el repositorio espejo oficial (`mirrors-mypy`)?
+
+Configuro mypy como hook local para así utilizar una única fuente de verdad para las dependencias, el uv.lock del repositorio.
+
+---
+
 3. ¿Qué herramienta de escaneo de secretos elegiste y por qué?
+
+Uso gitleaks. En pincipio utilicé detect-secrets porque me pareció que al estar escrito en python implementaría mejor. Pero su heurística falló y detecté un error cuando filtré un secreto (DJANGO_SECRET_KEY válida) en .env.example. Comprobé que detect-secrets detectaba el secreto en settings.py y en un fichero env_temp. Descubrí que el fichero .env.example lo clasificaba como FileType EXAMPLE y no aplicaba los transformers, por ello el Regex de detección de un secreto clave=valor sin comillas ("valor") no lo detectaba. He reemplazado por gitleaks que es más rápido, está escrito en Go y analiza todo el historial del repo (aunque no mantiene un .secrets.baseline para nuevos secretos, procesa con rapidez, pero requiere una instalación global con los binarios en local). He comprobado que gitleaks sí detecta el caso del secreto en .env.example.
+
+---
+
 4. ¿Qué hiciste con las migraciones en ruff y en mypy, y por qué?
+
+Configuro ambas tools en pyproject.toml para que ignoren y no actúen sobre las migraciones. Es código autogenerado por el ORM de Django que no tengo que editar, ni corregir ni testear.
+
+---
+
 5. ¿Versionas `docs/tutorial/` y `docs/entrevista/` (tus notas y tus evaluaciones) en el repo público, o los añades al `.gitignore`? ¿Qué pros y contras tiene cada opción?
+
+Los versiono por trasparencia. Este proyecto, además de crear una herramienta, tiene como objetivo evaluar y desarrollar mis habilidades. Por lo tanto estos archivos forman parte del proyecto, son públicos y abiertos tanto a reclutadores como a todo aquel que quiera obtener un aprendizaje de este desarrollo.
+
+En este caso, mantengo mi progreso y respuestas públicas y accesibles desde el repositorio.
+
+---
 
 ## Restricciones
 
