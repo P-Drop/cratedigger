@@ -26,17 +26,19 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
 
 ## Stack
 
-| Area | Technology |
+✅ Done | ⌛️ Pending
+
+| Area | Technology | Status |
 | --- | --- |
-| Language | **Python 3.13**, managed by **uv** venv |
-| Framework | **Django 5.2 LTS** |
-| API | DRF, drf-spectacular, django-filter, djangorestframework-simplejwt |
-| Relational DB | **PostgreSQL 17** (psycopg 3) |
-| Documental DB | **MongoDB 8** with PyMongo |
-| Extras | **Redis**, **Celery**, deploy |
-| Quality | **uv**, **ruff** (linter and formatter), **mypy** strict with **django-stubs** and **djangorestframework-stubs**, **pytest** with **pytest-django**, **pytest-cov** and **factory_boy**, **pre-commit** |
-| Infra | **Docker** + **Compose**, **GitHub Actions** |
-| API Client | **Bruno** |
+| Language | **Python 3.13**, managed by **uv** venv | ✅ |
+| Framework | **Django 5.2 LTS** | ✅ |
+| API | DRF, drf-spectacular, django-filter, djangorestframework-simplejwt | ⌛️ |
+| Relational DB | **PostgreSQL 17** (psycopg 3) | ⌛️ |
+| Documental DB | **MongoDB 8** with PyMongo | ⌛️ |
+| Extras | **Redis**, **Celery**, deploy | ⌛️ |
+| Quality | **uv**, **ruff** (linter and formatter), **mypy** strict with **django-stubs** and **djangorestframework-stubs**, **pytest** with **pytest-django**, **pytest-cov** and **factory_boy**, **pre-commit** | ✅ |
+| Infra | **Docker** + **Compose**, **GitHub Actions** | ⌛️ |
+| API Client | **Bruno** | ⌛️ |
 
 
 ## Install
