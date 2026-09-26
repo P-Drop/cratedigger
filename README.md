@@ -29,7 +29,7 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
 ✅ Done | ⌛️ Pending
 
 | Area | Technology | Status |
-| --- | --- |
+| --- | --- | --- |
 | Language | **Python 3.13**, managed by **uv** venv | ✅ |
 | Framework | **Django 5.2 LTS** | ✅ |
 | API | DRF, drf-spectacular, django-filter, djangorestframework-simplejwt | ⌛️ |
