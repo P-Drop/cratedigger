@@ -86,6 +86,8 @@ django_settings_module = "config.settings"
 [tool.pydantic-mypy]
 
 # Detecta argumentos que no existen
+# TRADE-OFF: Modo estricto detecta typos, pero fallará también si
+# añado otras variables en .env (p.ej. Docker Compose)
 init_forbid_extra = true
 
 # Exige el tipo real en cada argumento del __init__

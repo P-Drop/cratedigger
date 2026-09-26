@@ -141,7 +141,7 @@ Activo las reglas de ruff linter recomendadas que respentan el estilo PEP8 y man
 - pycodestyle (reglas E y W).
 - pyflakes (relga F).
 - isort (regla I).
-- pyupdate (regla UP)
+- pyupgrade (regla UP)
 - flake8-bugbear (regla B).
 - Simplificaciones de código (regla SIM).
 - Comprehensions limpias (regla C4).
@@ -159,7 +159,7 @@ Para el formatter de ruff:
 
 Ignoro la siguiente regla para todo el código fuente:
 
-- E501: longitud de línea. La longitud de línea ya está definida y gestionada por otra regla.
+- E501: longitud de línea. La longitud de línea la gestiona el formateador, que mantiene las URL y strings largas.
 
 También ignoro la siguiente regla para la suite de tests:
 
@@ -175,13 +175,19 @@ Configuro mypy como hook local para así utilizar una única fuente de verdad pa
 
 3. ¿Qué herramienta de escaneo de secretos elegiste y por qué?
 
-Uso gitleaks. En pincipio utilicé detect-secrets porque me pareció que al estar escrito en python implementaría mejor. Pero su heurística falló y detecté un error cuando filtré un secreto (DJANGO_SECRET_KEY válida) en .env.example. Comprobé que detect-secrets detectaba el secreto en settings.py y en un fichero env_temp. Descubrí que el fichero .env.example lo clasificaba como FileType EXAMPLE y no aplicaba los transformers, por ello el Regex de detección de un secreto clave=valor sin comillas ("valor") no lo detectaba. He reemplazado por gitleaks que es más rápido, está escrito en Go y analiza todo el historial del repo (aunque no mantiene un .secrets.baseline para nuevos secretos, procesa con rapidez, pero requiere una instalación global con los binarios en local). He comprobado que gitleaks sí detecta el caso del secreto en .env.example.
+Uso gitleaks. En primer lugar, utilicé detect-secrets porque me pareció que al estar escrito en python implementaría mejor. Pero su heurística falló y detecté un error cuando filtré un secreto (DJANGO_SECRET_KEY válida) en .env.example. Comprobé que detect-secrets detectaba el secreto en settings.py y en un fichero env_temp. Descubrí que el fichero .env.example lo clasificaba como FileType EXAMPLE y no aplicaba los transformers, por ello el Regex de detección de un secreto clave=valor sin comillas ("valor") no lo detectaba.
+
+He reemplazado por gitleaks que es más rápido (escrito en Go) y analiza todo el historial del repo. El equivalente de .secrets.baseline es .gitleaksignore con fingerprint y @ gitleaks: allow en línea. En el hook se escanean los archivos del stage, pero con el comando `gitleaks git` se puede escanear todo el historial (también en CI). El id gitleaks del hook construye y ejecuta su propio binario.
+
+He comprobado que gitleaks sí detecta el caso del secreto en .env.example.
 
 ---
 
 4. ¿Qué hiciste con las migraciones en ruff y en mypy, y por qué?
 
 Configuro ambas tools en pyproject.toml para que ignoren y no actúen sobre las migraciones. Es código autogenerado por el ORM de Django que no tengo que editar, ni corregir ni testear.
+
+De momento está configuración es válida, pero genera un trade-off para siguientes fases: el `RunPython` de un data migration también queda fuera de las herramientas de detección de bugs. Se gestionará más adelante.
 
 ---
 

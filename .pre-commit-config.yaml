@@ -52,4 +52,6 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
+        # Añado el tipo de commit personalizado 'learn' para respuestas a Claude
+        # en commits que no cambian el código.
         args: [build, chore, ci, docs, feat, fix, learn, perf, refactor, revert, style, test]
