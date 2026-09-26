@@ -1,20 +1,12 @@
-from pathlib import Path
+import dj_database_url
 
-import environ
+from .env import EnvSettings
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+env = EnvSettings()
 
-env = environ.Env(
-    DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, []),
-)
-
-environ.Env.read_env(BASE_DIR / ".env")
-
-SECRET_KEY = env("DJANGO_SECRET_KEY")
-DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+SECRET_KEY = env.django_secret_key.get_secret_value()
+DEBUG = env.debug
+ALLOWED_HOSTS = env.allowed_hosts
 
 
 # Application definition
@@ -61,7 +53,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {"default": env.db()}
+DATABASES = {"default": dj_database_url.parse(env.database_url)}
 
 
 # Password validation

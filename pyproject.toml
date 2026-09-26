@@ -7,8 +7,9 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "dj-database-url>=3.1.2",
     "django>=5.2,<6",
-    "django-environ>=0.14.0",
+    "pydantic-settings>=2.15.0",
 ]
 
 [dependency-groups]
@@ -24,7 +25,7 @@ dev = [
 ]
 
 # -------------
-# Ruff
+# -> Ruff
 
 [tool.ruff]
 # Ajusta longitud de linea a 88 caracteres
@@ -66,25 +67,35 @@ ignore = [
 # Activa el formateo del código de ejemplo en docstrings
 docstring-code-format = true
 
+
 # -------------
-# Mypy
+# -> Mypy
 
 [tool.mypy]
 # Modo tipado estricto
 strict = true
 
-plugins = ["mypy_django_plugin.main"]
+plugins = ["mypy_django_plugin.main", "pydantic.mypy"]
 exclude = ["migrations/"]
 
-[[tool.mypy.overrides]]
-module = ["environ.*"]
-ignore_missing_imports = true
-
+# -> Django stubs
 [tool.django-stubs]
 django_settings_module = "config.settings"
 
+# -> Pydantic
+[tool.pydantic-mypy]
+
+# Detecta argumentos que no existen
+init_forbid_extra = true
+
+# Exige el tipo real en cada argumento del __init__
+init_typed = true
+
+# Avisa si un alias impide a mypy comprobar los argumentos
+warn_required_dynamic_aliases = true
+
 # -------------
-# Pytest
+# -> Pytest
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
