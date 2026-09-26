@@ -1,23 +1,23 @@
-# ADR-XXXX: <Título>
+# ADR-XXXX: [Título]
 
 ## Estado
 
-<Estado> <Fecha>
+[Estado] [Fecha]
 
 ## Contexto
 
-<Contexto>
+[Contexto]
 
 ## Decisión
 
-<Decisión>
+[Decisión]
 
 ### Alternativas descartadas
 
-<Alternativas>
+[Alternativas]
 
 ## Consecuencias
 
-<Positivas>
+[Positivas]
 
-<Trade-off>
+[Trade-off]

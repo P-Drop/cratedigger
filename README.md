@@ -3,7 +3,7 @@
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
 
-Crate Digger is a contribuition to Hip Hop Roots and Culture.
+Crate Digger is a contribution to Hip Hop Roots and Culture.
 
 It provides an API REST with artists and releases, sampling registry and lyrics archive.
 

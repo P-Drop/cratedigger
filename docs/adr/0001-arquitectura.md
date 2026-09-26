@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aceptada    23/09/2026
+Aceptada    2026-09-23
 
 ## Contexto
 
@@ -14,13 +14,13 @@ Además, el objetivo principal de este proyecto es aprender sobre desarrollo bac
 
 ## Decisión
 
-Decido aplicar una arquitectura híbrida basada en **Capas pragmáticas** (siguiendo el estilo de [HackSoft Django Sytleguide](https://github.com/HackSoftware/Django-Styleguide)) combinada con **puertos y adaptadores** de **Arquitectura Hexagonal** solo en los bordes, para conectar la base de datos documental y las referencias externas como consultas a APIs de terceros.
+Decido aplicar una arquitectura híbrida basada en **Capas pragmáticas** (siguiendo el estilo de [HackSoft Django Styleguide](https://github.com/HackSoftware/Django-Styleguide)) combinada con **puertos y adaptadores** de **Arquitectura Hexagonal** solo en los bordes, para conectar la base de datos documental y las referencias externas como consultas a APIs de terceros.
 
 La razón de esta elección es tomar los beneficios de estos modelos limitando su complejidad, sin dejar de aprovechar herramientas nativas de Django, como el ORM, el panel de administración, builds y métodos propios.
 
 Por lo tanto, el modelo elegido se compone de:
 
-- Capa de presentación con vistas y serialicers delgados, que se ocupan solo del HTTP.
+- Capa de presentación con vistas y serializers delgados, que se ocupan solo del HTTP.
 
 - Capa de servicios con los casos de uso, que concentra las reglas de negocio y transacciones.
 
@@ -28,7 +28,7 @@ Por lo tanto, el modelo elegido se compone de:
 
 - Capa de dominio con los modelos, cuyas invariantes quedan garantizadas por la base de datos.
 
-- Puertos y adaptadores para MongoDB (lyrics) y API de MusicBraniz: cada puerto es una interfaz (`typing.Protocol`) que implementa un adaptador real y un fake para los tests.
+- Puertos y adaptadores para MongoDB (lyrics) y API de MusicBrainz: cada puerto es una interfaz (`typing.Protocol`) que implementa un adaptador real y un fake para los tests.
 
 ### Alternativas consideradas
 
@@ -38,7 +38,7 @@ Por lo tanto, el modelo elegido se compone de:
 
 ## Consecuencias
 
-<Positivas>
+### Positivas
 
 - La lógica de negocio vive en la capa de servicios, al contrario que *Fat models*, por lo que facilita las pruebas y el seguimiento. Esto, además, crea una línea diferenciada entre lo que *hace* la API y lo que *muestra*.
 
@@ -46,7 +46,7 @@ Por lo tanto, el modelo elegido se compone de:
 
 - La arquitectura de capas y los puertos y adaptadores permiten optimizar los tests. Se pueden realizar pruebas unitarias de cada servicio o adaptador de forma independiente, utilizando mock y fake data para evitar conexiones a base de datos innecesarias que ralentizarían la suite.
 
-<Trade-off>
+### Trade-off
 
 - La decisión implica lidiar con la complejidad de una arquitectura para la que no tengo experiencia. Tengo que comprender y elegir la estructura adecuada y documentarme sobre las prácticas recomendadas, sus problemas y limitaciones.
 

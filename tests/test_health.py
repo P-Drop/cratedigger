@@ -9,6 +9,6 @@ def test_django_check() -> None:
 
 
 @pytest.mark.django_db
-def test_admin_login_responde_200(client: Client) -> None:
+def test_admin_login_returns_200(client: Client) -> None:
     response = client.get(reverse("admin:login"))
     assert response.status_code == 200

@@ -97,6 +97,7 @@ addopts = [
     # configuracion de cobertura temporal, despues ira solo en CI
     "--cov",
     "--cov-report=html",
+    "--cov-report=term-missing",
     "--cov-fail-under=85",
 ]
 
