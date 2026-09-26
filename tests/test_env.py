@@ -1,7 +1,11 @@
+from collections.abc import Callable
+
 import pytest
 from pydantic import ValidationError
 
 from config.env import EnvSettings
+
+TEST_SECRET_KEY = "test-secret-key"
 
 
 @pytest.fixture(autouse=True)
@@ -10,7 +14,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     y define solamente las que son necesarias"""
     for field in EnvSettings.model_fields:
         monkeypatch.delenv(field.upper(), raising=False)
-    monkeypatch.setenv("DJANGO_SECRET_KEY", "test-secret-key")
+    monkeypatch.setenv("DJANGO_SECRET_KEY", TEST_SECRET_KEY)
     monkeypatch.setenv("DATABASE_URL", "sqlite://:memory:")
 
 
@@ -52,3 +56,15 @@ def test_missing_secret_key_fails_fast(monkeypatch: pytest.MonkeyPatch) -> None:
     assert [(e["type"], e["loc"]) for e in errors] == [
         ("missing", ("django_secret_key",))
     ]
+
+
+@pytest.mark.parametrize(
+    "render", [repr, str, EnvSettings.model_dump_json], ids=["repr", "str", "json"]
+)
+def test_secret_key_not_exposed_in_object_repr(
+    render: Callable[[EnvSettings], str],
+) -> None:
+    settings = EnvSettings(_env_file=None)
+
+    assert settings.django_secret_key.get_secret_value() == TEST_SECRET_KEY
+    assert TEST_SECRET_KEY not in render(settings)

@@ -60,8 +60,12 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101"]    # assert permitido en tests
-"**/tests.py" = ["S101"]
+# En test se ignoran:
+# S101: para permitir asserts
+# S105: para permitir credenciales hardcodeadas (falsas)
+# S106: para permitir credenciales como argumentos (falsas)
+"**/tests/**" = ["S101", "S105", "S106"]
+"**/tests.py" = ["S101", "S105", "S106"]
 
 [tool.ruff.format]
 # Activa el formateo del código de ejemplo en docstrings
