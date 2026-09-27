@@ -1,4 +1,6 @@
+import operator
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -59,7 +61,9 @@ def test_missing_secret_key_fails_fast(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize(
-    "render", [repr, str, EnvSettings.model_dump_json], ids=["repr", "str", "json"]
+    "render",
+    [repr, str, operator.methodcaller("model_dump_json")],
+    ids=["repr", "str", "json"],
 )
 def test_secret_key_not_exposed_in_object_repr(
     render: Callable[[EnvSettings], str],
@@ -68,3 +72,42 @@ def test_secret_key_not_exposed_in_object_repr(
 
     assert settings.django_secret_key.get_secret_value() == TEST_SECRET_KEY
     assert TEST_SECRET_KEY not in render(settings)
+
+
+def test_debug_default_is_false() -> None:
+    assert EnvSettings(_env_file=None).debug is False
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("True", True), ("true", True), ("1", True), ("False", False), ("0", False)],
+)
+def test_debug_parses_env_value(
+    monkeypatch: pytest.MonkeyPatch, raw: str, expected: bool
+) -> None:
+    monkeypatch.setenv("DEBUG", raw)
+
+    assert EnvSettings(_env_file=None).debug is expected
+
+
+def test_unknown_key_in_env_file_is_forbidden(tmp_path: Path) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("DATABASE_ULR=sqlite://:memory:")
+
+    with pytest.raises(ValidationError) as exc_info:
+        EnvSettings(_env_file=env_file)
+
+    errors = exc_info.value.errors()
+
+    assert [(e["type"], e["loc"], e["input"]) for e in errors] == [
+        ("extra_forbidden", ("database_ulr",), "sqlite://:memory:")
+    ]
+
+
+# Prueba detalle de limitación en producción
+def test_unknown_enviroment_variable_is_ignored(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DEGUB", "True")
+
+    assert EnvSettings(_env_file=None).debug is False
