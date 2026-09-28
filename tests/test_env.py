@@ -17,9 +17,12 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     for field in EnvSettings.model_fields:
         monkeypatch.delenv(field.upper(), raising=False)
     monkeypatch.setenv("DJANGO_SECRET_KEY", TEST_SECRET_KEY)
-    monkeypatch.setenv("POSTGRES_DB", "test_db")
-    monkeypatch.setenv("POSTGRES_USER", "test_user")
-    monkeypatch.setenv("POSTGRES_PASSWORD", "test_password")
+    monkeypatch.setenv("POSTGRES_DB", "test_pg_db")
+    monkeypatch.setenv("POSTGRES_USER", "test_pg_user")
+    monkeypatch.setenv("POSTGRES_PASSWORD", "test_pg_password")
+    monkeypatch.setenv("MONGO_DB", "test_mongodb")
+    monkeypatch.setenv("MONGO_USER", "test_mongo_user")
+    monkeypatch.setenv("MONGO_PASSWORD", "test_mongo_password")
 
 
 @pytest.mark.parametrize(

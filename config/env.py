@@ -21,6 +21,13 @@ class EnvSettings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = Field(default=5432, ge=1, le=65535)
 
+    # mongodb
+    mongo_db: str
+    mongo_user: str
+    mongo_password: SecretStr
+    mongo_host: str = "localhost"
+    mongo_port: int = Field(default=27017, ge=1, le=65535)
+
     @field_validator("allowed_hosts", mode="before")
     @classmethod
     def split_hosts(cls, value: str | list[str]) -> list[str]:
