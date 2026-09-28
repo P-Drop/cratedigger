@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
@@ -34,3 +34,13 @@ class EnvSettings(BaseSettings):
         if isinstance(value, str):
             return [host.strip() for host in value.split(",") if host.strip()]
         return value
+
+
+class MongoConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    user: str
+    password: SecretStr
+    host: str
+    port: int

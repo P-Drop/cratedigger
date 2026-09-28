@@ -1,4 +1,4 @@
-from .env import EnvSettings
+from .env import EnvSettings, MongoConfig
 
 env = EnvSettings()
 
@@ -61,6 +61,14 @@ DATABASES = {
         "PORT": env.postgres_port,
     }
 }
+
+MONGODB = MongoConfig(
+    name=env.mongo_db,
+    user=env.mongo_user,
+    password=env.mongo_password,
+    host=env.mongo_host,
+    port=env.mongo_port,
+)
 
 
 # Password validation

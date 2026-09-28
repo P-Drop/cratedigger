@@ -3,6 +3,9 @@ from django.core.management import call_command
 from django.db import connection
 from django.test.client import Client
 from django.urls import reverse
+from pymongo.database import Database
+
+from infra.mongo import Document
 
 
 def test_django_check() -> None:
@@ -17,3 +20,7 @@ def test_admin_login_returns_200(client: Client) -> None:
 
 def test_database_backend_is_postgresql() -> None:
     assert connection.vendor == "postgresql"
+
+
+def test_mongo_responds(mongo_db: Database[Document]) -> None:
+    assert mongo_db.command("ping")["ok"] == 1
