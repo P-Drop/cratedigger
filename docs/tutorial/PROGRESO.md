@@ -4,10 +4,10 @@
 
 ## Estado actual
 
-- **Fase actual:** 1 · Infraestructura local y configuración (sin abrir)
-- **Estado:** ⬜ Pendiente de abrir. La Fase 0 está superada con 19/20.
-- **Siguiente paso:** cuando digas, abro la Fase 1 con el repaso espaciado (2 preguntas) y el enunciado del reto.
-- **Última actualización:** 2026-09-27
+- **Fase actual:** 1 · Infraestructura local y configuración
+- **Estado:** 🟦 En curso. Reto en [`retos/fase-01-infra.md`](retos/fase-01-infra.md).
+- **Siguiente paso:** crear la rama `feat/phase-01-infra`, implementar el reto y decir «listo para review».
+- **Última actualización:** 2026-09-28
 
 Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · 🔁 rehacer
 
@@ -16,7 +16,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 | Fase | Estado | Nota /20 | Cierre | PR |
 |---|---|---|---|---|
 | 0 · Setup profesional | ✅ | 19 | 2026-09-27 | — (commits directos en `main`) |
-| 1 · Infra y configuración | ⬜ | — | — | — |
+| 1 · Infra y configuración | 🟦 | — | — | — |
 | 2 · CI y flujo de PRs | ⬜ | — | — | — |
 | 3 · Modelado del catálogo | ⬜ | — | — | — |
 | 4 · API del catálogo | ⬜ | — | — | — |
@@ -37,9 +37,9 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 
 | Tema | Origen | Aciertos |
 |---|---|---|
-| Qué garantiza un lockfile (grafo transitivo, hashes, resolución universal) y qué **no** garantiza (intérprete, librerías del sistema, compilador) | F0 · P1 🟡 | 0 |
-| Secretos ya publicados: detección ≠ prevención. Rotar primero, luego limpiar historial; push protection como barrera previa | F0 · P2, matiz no cubierto | 0 |
-| Pendientes de decidir en F1: `extra="forbid"` con las variables de Compose, y dónde vive `BASE_DIR` | F0 · review | 0 |
+| Qué garantiza un lockfile (grafo transitivo, hashes, resolución universal) y qué **no** garantiza (intérprete, librerías del sistema, compilador). Un contenedor comparte el kernel del host; la imagen solo es reproducible fijada por digest | F0 · P1 🟡 · repaso F1 🟡 (faltó la resolución universal; sobrestimó la reproducibilidad del contenedor) | 0 |
+| Secretos ya publicados: detección ≠ prevención. Rotar primero, luego limpiar historial; push protection como barrera previa. Matices: análisis de impacto en paralelo a la rotación, mínimo privilegio | F0 · P2, matiz no cubierto · repaso F1 ✅ | 1 |
+| Pendientes de decidir en F1: `extra="forbid"` con las variables de Compose, y dónde vive `BASE_DIR` | F0 · review → preguntas de diseño 1 y 2 del reto F1 | 0 |
 
 ## Ayudas usadas
 
