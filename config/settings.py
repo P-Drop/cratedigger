@@ -1,5 +1,3 @@
-import dj_database_url
-
 from .env import EnvSettings
 
 env = EnvSettings()
@@ -53,7 +51,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {"default": dj_database_url.parse(env.database_url)}
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.postgres_db,
+        "USER": env.postgres_user,
+        "PASSWORD": env.postgres_password.get_secret_value(),
+        "HOST": env.postgres_host,
+        "PORT": env.postgres_port,
+    }
+}
 
 
 # Password validation

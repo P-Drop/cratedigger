@@ -13,7 +13,13 @@ class EnvSettings(BaseSettings):
     django_secret_key: SecretStr
     debug: bool = False
     allowed_hosts: Annotated[list[str], NoDecode] = Field(default_factory=list)
-    database_url: str
+
+    # postgresql
+    postgres_db: str
+    postgres_user: str
+    postgres_password: SecretStr
+    postgres_host: str = "localhost"
+    postgres_port: int = Field(default=5432, ge=1, le=65535)
 
     @field_validator("allowed_hosts", mode="before")
     @classmethod
