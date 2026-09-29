@@ -5,7 +5,8 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class EnvSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file_encoding="utf-8")
+    # Política explícita: bloquear variables desconocidas en .env
+    model_config = SettingsConfigDict(extra="forbid", env_file_encoding="utf-8")
 
     django_secret_key: SecretStr
     debug: bool = False
