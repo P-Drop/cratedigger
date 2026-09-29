@@ -1,14 +1,11 @@
-from pathlib import Path
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
-ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
-
 
 class EnvSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ENV_FILE, env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file_encoding="utf-8")
 
     django_secret_key: SecretStr
     debug: bool = False
