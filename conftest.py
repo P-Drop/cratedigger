@@ -4,7 +4,7 @@ import pytest
 from pymongo.database import Database
 from pytest_django.fixtures import Settings
 
-from infra.mongo import Document, get_client, get_database
+from cratedigger.core.mongo import Document, get_client, get_database
 
 
 @pytest.fixture

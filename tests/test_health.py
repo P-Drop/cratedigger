@@ -5,7 +5,7 @@ from django.test.client import Client
 from django.urls import reverse
 from pymongo.database import Database
 
-from infra.mongo import Document
+from cratedigger.core.mongo import Document
 
 
 # Django
