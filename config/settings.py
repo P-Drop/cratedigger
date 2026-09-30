@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "cratedigger.core",
+    "cratedigger.accounts",
 ]
 
 MIDDLEWARE = [
@@ -74,6 +75,9 @@ MONGODB = MongoConfig(
     host=env.mongo_host,
     port=env.mongo_port,
 )
+
+# Custom User
+AUTH_USER_MODEL = "accounts.User"
 
 
 # Password validation
