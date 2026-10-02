@@ -65,6 +65,9 @@ DATABASES = {
         "PASSWORD": env.postgres_password.get_secret_value(),
         "HOST": env.postgres_host,
         "PORT": env.postgres_port,
+        "OPTIONS": {
+            "connect_timeout": 2,
+        },
     }
 }
 

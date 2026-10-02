@@ -53,7 +53,8 @@ select = [
     "DJ",        # reglas especificas de Django
     "S",         # flake8-bandit: seguridad
     "T20",       # print / pprint
-    "RUF"        # reglas propias de Ruff
+    "RUF",       # reglas propias de Ruff
+    "TRY401",    # evita logging de excepciones redundante
 ]
 
 ignore = [
