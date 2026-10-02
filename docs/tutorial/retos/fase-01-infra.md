@@ -86,11 +86,103 @@ Que con `docker compose up -d` y `uv run python manage.py migrate` la app corra 
 
 ## Criterios de aceptación
 
-- [ ] `docker compose ps` muestra `postgres` y `mongo` como `healthy`.
-- [ ] Tras `docker compose down -v` y `docker compose up -d`, `migrate` funciona desde cero contra PostgreSQL.
-- [ ] En la BD existe la tabla del `User` de `accounts` y **no** existe `auth_user`. Pega la salida de `\dt` en la PR.
-- [ ] `curl -i localhost:8000/health/` devuelve `200` con el JSON de detalle.
-- [ ] Con `docker compose stop mongo`, `/health/` devuelve `503` en pocos segundos, no tras 30. Pega ambas salidas en la PR.
+- [x] `docker compose ps` muestra `postgres` y `mongo` como `healthy`.
+
+```bash
+CONTAINER ID   IMAGE                   COMMAND                  CREATED        STATUS                    PORTS                        NAMES
+************   postgres:17.11-trixie   "docker-entrypoint.s…"   20 hours ago   Up 15 minutes (healthy)   127.0.0.1:5432->5432/tcp     django-crud-postgres-1
+************   mongo:7.0.43-jammy      "docker-entrypoint.s…"   20 hours ago   Up 15 minutes (healthy)   127.0.0.1:27017->27017/tcp   django-crud-mongo-1
+
+```
+- [X] Tras `docker compose down -v` y `docker compose up -d`, `migrate` funciona desde cero contra PostgreSQL.
+
+```bash
+Operations to perform:
+  Apply all migrations: accounts, admin, auth, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying accounts.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying sessions.0001_initial... OK
+
+```
+
+- [X] En la BD existe la tabla del `User` de `accounts` y **no** existe `auth_user`. Pega la salida de `\dt` en la PR.
+
+```bash
+                       List of relations
+ Schema |              Name              | Type  |    Owner
+--------+--------------------------------+-------+-------------
+ public | accounts_user                  | table | cratedigger
+ public | accounts_user_groups           | table | cratedigger
+ public | accounts_user_user_permissions | table | cratedigger
+ public | auth_group                     | table | cratedigger
+ public | auth_group_permissions         | table | cratedigger
+ public | auth_permission                | table | cratedigger
+ public | django_admin_log               | table | cratedigger
+ public | django_content_type            | table | cratedigger
+ public | django_migrations              | table | cratedigger
+ public | django_session                 | table | cratedigger
+(10 rows)
+```
+
+- [x] `curl -i localhost:8000/health/` devuelve `200` con el JSON de detalle.
+
+```bash
+HTTP/1.1 200 OK
+Date: Thu, 01 Oct 2026 20:09:07 GMT
+Server: WSGIServer/0.2 CPython/3.13.15
+Content-Type: application/json
+Expires: Thu, 01 Oct 2026 20:09:07 GMT
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate, private
+X-Frame-Options: DENY
+Content-Length: 70
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"status": "healthy", "checks": {"postgresql": "up", "mongodb": "up"}}
+```
+
+- [x] Con `docker compose stop mongo`, `/health/` devuelve `503` en pocos segundos, no tras 30. Pega ambas salidas en la PR.
+
+```bash
+> time curl -i http://localhost:8000/health/
+
+HTTP/1.1 503 Service Unavailable
+Date: Thu, 01 Oct 2026 20:13:12 GMT
+Server: WSGIServer/0.2 CPython/3.13.15
+Content-Type: application/json
+Expires: Thu, 01 Oct 2026 20:13:12 GMT
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate, private
+X-Frame-Options: DENY
+Content-Length: 74
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"status": "unhealthy", "checks": {"postgresql": "up", "mongodb": "down"}}
+real	0m2,081s
+user	0m0,007s
+sys	0m0,012s
+
+```
+
 - [ ] La respuesta lleva `X-Request-ID`. Una petición con `-H "X-Request-ID: <uno válido>"` lo devuelve igual y ese id aparece en el log de `runserver`.
 - [ ] Sin `DJANGO_SECRET_KEY` (u otra variable obligatoria), `manage.py check` falla con un mensaje que dice qué falta.
 - [ ] `uv run pre-commit run --all-files`, `uv run mypy .` y `uv run pytest` en verde, con cobertura ≥ 85 %.
