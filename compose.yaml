@@ -1,3 +1,4 @@
+name: cratedigger
 services:
   postgres:
     image: postgres:17.11-trixie
