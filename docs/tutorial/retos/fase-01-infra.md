@@ -67,7 +67,10 @@ Que con `docker compose up -d` y `uv run python manage.py migrate` la app corra 
 
 - Si la petición trae la cabecera `X-Request-ID` **y es válida**, se reutiliza. Si no, se genera uno.
 - El id se devuelve en la cabecera `X-Request-ID` de la respuesta.
-- El id aparece en **cada** línea de log emitida durante esa petición, también en las de otros módulos. Configura `LOGGING` para ello.
+- El id aparece en **cada** línea de log emitida mientras la petición está dentro de tu middleware (entre que entra y que sale), también en las de otros módulos. Configura `LOGGING` para ello.
+- Cada petición deja **al menos una** línea de log con su id, también cuando todo va bien.
+- Al salir del middleware, el id no puede quedar vivo para la siguiente petición.
+- *Aclaración (2026-10-05):* las líneas que Django emite fuera de la cadena de middlewares (`django.server` y el aviso de `django.request` para respuestas 4xx/5xx devueltas por la vista) no están obligadas a llevar el id. Si lo consigues sin fugas, suma.
 - Decide qué significa «válida» y justifícalo.
 
 ### 7. Tests
@@ -119,7 +122,6 @@ Running migrations:
   Applying admin.0002_logentry_remove_auto_add... OK
   Applying admin.0003_logentry_add_action_flag_choices... OK
   Applying sessions.0001_initial... OK
-
 ```
 
 - [X] En la BD existe la tabla del `User` de `accounts` y **no** existe `auth_user`. Pega la salida de `\dt` en la PR.
@@ -180,14 +182,39 @@ Cross-Origin-Opener-Policy: same-origin
 real	0m2,081s
 user	0m0,007s
 sys	0m0,012s
-
 ```
 
-- [ ] La respuesta lleva `X-Request-ID`. Una petición con `-H "X-Request-ID: <uno válido>"` lo devuelve igual y ese id aparece en el log de `runserver`.
-- [ ] Sin `DJANGO_SECRET_KEY` (u otra variable obligatoria), `manage.py check` falla con un mensaje que dice qué falta.
-- [ ] `uv run pre-commit run --all-files`, `uv run mypy .` y `uv run pytest` en verde, con cobertura ≥ 85 %.
-- [ ] En el repo no hay `.env` ni `db.sqlite3`, y `.env.example` solo tiene marcadores.
-- [ ] La rama `feat/phase-01-infra` tiene commits atómicos y convencionales, y la PR está descrita.
+- [ ] La respuesta lleva `X-Request-ID`. Una petición con `-H "X-Request-ID: <uno válido>"` lo devuelve igual y ese id aparece en al menos una línea de la salida de `runserver`, también con `/health/` en 200.
+- [x] Sin `DJANGO_SECRET_KEY` (u otra variable obligatoria), `manage.py check` falla con un mensaje que dice qué falta.
+
+```bash
+pydantic_core._pydantic_core.ValidationError: 7 validation errors for EnvSettings
+django_secret_key
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+postgres_db
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+postgres_user
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+postgres_password
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+mongo_db
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+mongo_user
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+mongo_password
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+```
+
+- [x] `uv run pre-commit run --all-files`, `uv run mypy .` y `uv run pytest` en verde, con cobertura ≥ 85 %.
+- [x] En el repo no hay `.env` ni `db.sqlite3`, y `.env.example` solo tiene marcadores.
+- [x] La rama `feat/phase-01-infra` tiene commits atómicos y convencionales, y la PR está descrita.
 
 ## Restricciones
 
