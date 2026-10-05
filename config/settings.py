@@ -155,6 +155,10 @@ LOGGING = {
             # Replace DEFAULT_LOGGING handler, propagating to root handler
             "handlers": [],
             "level": "INFO",
-        }
+        },
+        "django.server": {
+            # INFO level covered by middleware access log
+            "level": "WARNING",
+        },
     },
 }

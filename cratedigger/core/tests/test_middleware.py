@@ -113,3 +113,36 @@ class TestRequestIdMiddleware:
         [record] = [r for r in caplog.records if r.name == "cratedigger.core.health"]
 
         assert vars(record)["request_id"] == valid_value
+
+    def test_access_log_carries_request_id(
+        self,
+        client: Client,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        req_filter = RequestIdFilter()
+        caplog.handler.addFilter(req_filter)
+        valid_value = str(uuid.uuid4())
+
+        client.get(UNKNOWN_URL, headers={"X-Request-ID": valid_value})
+        [record] = [
+            r for r in caplog.records if r.name == "cratedigger.core.middleware"
+        ]
+
+        assert vars(record)["request_id"] == valid_value
+
+    def test_access_log_protected_from_url_injection(
+        self,
+        client: Client,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        injection_url = "/url-injection%0d%0a"
+
+        client.get(injection_url)
+        [record] = [
+            r for r in caplog.records if r.name == "cratedigger.core.middleware"
+        ]
+        record_msg = record.getMessage()
+
+        assert "\n" not in record_msg
+        assert "\r" not in record_msg
+        assert "\\r\\n" in record_msg

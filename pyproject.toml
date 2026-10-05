@@ -55,6 +55,7 @@ select = [
     "T20",       # print / pprint
     "RUF",       # reglas propias de Ruff
     "TRY401",    # evita logging de excepciones redundante
+    "G004"      # flake8-logging-format: evita f-stings en logger
 ]
 
 ignore = [

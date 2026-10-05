@@ -1,9 +1,13 @@
+import logging
+import time
 import uuid
 from collections.abc import Callable
 
 from django.http import HttpRequest, HttpResponseBase
 
 from cratedigger.core.request_context import request_id_var
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_request_id(raw: str | None) -> str:
@@ -31,9 +35,19 @@ class RequestIdMiddleware:
         token = request_id_var.set(req_id)
 
         try:
+            t_before = time.perf_counter()
             response = self.get_response(request)
+            t_after = time.perf_counter()
 
             response[self.REQUEST_HEADER] = req_id
+
+            logger.info(
+                "%s %r %s %.1fms",
+                request.method,
+                request.path,
+                response.status_code,
+                (t_after - t_before) * 1000,
+            )
 
         finally:
             request_id_var.reset(token)
