@@ -159,6 +159,7 @@ LOGGING = {
         "django.server": {
             # INFO level covered by middleware access log
             "level": "WARNING",
+            "propagate": True,
         },
     },
 }
