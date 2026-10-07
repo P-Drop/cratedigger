@@ -8,6 +8,7 @@ from django.urls import reverse
 from cratedigger.core.health import _services_registry
 
 
+@pytest.mark.integration
 @pytest.mark.django_db
 def test_health_returns_200_when_all_services_up(client: Client) -> None:
     response = client.get(reverse("healthcheck"))
@@ -19,7 +20,6 @@ def test_health_returns_200_when_all_services_up(client: Client) -> None:
     assert body["checks"]["mongodb"] == "up"
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("down_service", ["postgresql", "mongodb"])
 def test_health_returns_503_when_service_down(
     client: Client,
@@ -44,7 +44,6 @@ def test_health_rejects_post(client: Client) -> None:
     assert response.status_code == 405
 
 
-@pytest.mark.django_db
 def test_health_does_not_leak_exception_details(
     client: Client,
     caplog: pytest.LogCaptureFixture,

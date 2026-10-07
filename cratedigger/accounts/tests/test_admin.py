@@ -13,6 +13,7 @@ def test_user_model_registered_as_user_admin() -> None:
     assert isinstance(model_admin, UserAdmin)
 
 
+@pytest.mark.integration
 @pytest.mark.django_db
 def test_superuser_able_to_list_user_at_admin_panel(admin_client: Client) -> None:
     url = reverse("admin:accounts_user_changelist")

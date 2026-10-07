@@ -120,6 +120,7 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-fail-under=85",
 ]
+markers=["integration: needs running Postgres/Mongo"]
 
 [tool.coverage.run]
 source = ["."]

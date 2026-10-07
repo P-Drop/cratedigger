@@ -9,6 +9,7 @@ def test_get_user_model_returns_custom_model() -> None:
     assert get_user_model() is User
 
 
+@pytest.mark.integration
 @pytest.mark.django_db
 def test_create_user_sets_regular_user_flags() -> None:
     user = User.objects.create_user(
@@ -22,6 +23,7 @@ def test_create_user_sets_regular_user_flags() -> None:
     assert user.is_active is True
 
 
+@pytest.mark.integration
 @pytest.mark.django_db
 def test_create_superuser_sets_superuser_flags() -> None:
     superuser = User.objects.create_superuser(
@@ -34,6 +36,7 @@ def test_create_superuser_sets_superuser_flags() -> None:
     assert superuser.is_staff is True
 
 
+@pytest.mark.integration
 @pytest.mark.django_db
 def test_user_password_saved_as_hash() -> None:
     user = User.objects.create_user(
@@ -45,6 +48,7 @@ def test_user_password_saved_as_hash() -> None:
     assert user.password != "test_password"
 
 
+@pytest.mark.integration
 @pytest.mark.django_db
 def test_check_password_accepts_correct_and_rejects_wrong() -> None:
     user = User.objects.create_user(
