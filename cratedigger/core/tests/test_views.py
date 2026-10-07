@@ -5,7 +5,7 @@ import pytest
 from django.test.client import Client
 from django.urls import reverse
 
-from cratedigger.core.health import _services_registry
+from cratedigger.core.health import CHECKS
 
 
 @pytest.mark.integration
@@ -27,7 +27,7 @@ def test_health_returns_503_when_service_down(
     down_service: str,
     stub_services_up_except: Callable[[str], None],
 ) -> None:
-    monkeypatch.setitem(_services_registry, down_service, lambda: False)
+    monkeypatch.setitem(CHECKS, down_service, lambda: False)
     stub_services_up_except(down_service)
 
     response = client.get(reverse("healthcheck"))
@@ -44,6 +44,8 @@ def test_health_rejects_post(client: Client) -> None:
     assert response.status_code == 405
 
 
+@pytest.mark.integration
+@pytest.mark.django_db
 def test_health_does_not_leak_exception_details(
     client: Client,
     caplog: pytest.LogCaptureFixture,

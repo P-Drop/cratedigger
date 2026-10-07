@@ -36,13 +36,13 @@ def _healthcheck_mongo() -> bool:
         return False
 
 
-_services_registry: dict[str, Callable[[], bool]] = {
+# Dependency checks run by run_checks()
+# Tests replace entries with monkeypatch.setitem
+CHECKS: dict[str, Callable[[], bool]] = {
     "postgresql": _healthcheck_postgres,
     "mongodb": _healthcheck_mongo,
 }
 
 
 def run_checks() -> dict[str, bool]:
-    return {
-        service: healthcheck() for service, healthcheck in _services_registry.items()
-    }
+    return {service: healthcheck() for service, healthcheck in CHECKS.items()}

@@ -5,7 +5,7 @@ import pytest
 from django.test.client import Client
 from django.urls import reverse
 
-from cratedigger.core.middleware import _resolve_request_id
+from cratedigger.core.middleware import resolve_request_id
 from cratedigger.core.request_context import RequestIdFilter
 
 UNKNOWN_URL = "/no-such-path/"
@@ -40,7 +40,7 @@ class TestResolveRequestId:
     def test_resolve_request_id_returns_normalized_when_valid(
         self, raw: str, expected: str
     ) -> None:
-        value = _resolve_request_id(raw)
+        value = resolve_request_id(raw)
 
         assert value == expected
 
@@ -63,7 +63,7 @@ class TestResolveRequestId:
         self,
         raw: str | None,
     ) -> None:
-        value = _resolve_request_id(raw)
+        value = resolve_request_id(raw)
 
         assert value != raw
         assert value == str(uuid.UUID(value))

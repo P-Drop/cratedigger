@@ -5,7 +5,7 @@ import pytest
 from django.db import DatabaseError, connection
 from pymongo.errors import ServerSelectionTimeoutError
 
-from cratedigger.core.health import _services_registry
+from cratedigger.core.health import CHECKS
 
 SENSITIVE_DETAIL = "connection to server at secret-host:5432 failed."
 
@@ -36,9 +36,9 @@ def mongo_fails(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def stub_services_up_except(monkeypatch: pytest.MonkeyPatch) -> Callable[[str], None]:
     def _stub(real_service: str) -> None:
-        for service in _services_registry:
+        for service in CHECKS:
             if service == real_service:
                 continue
-            monkeypatch.setitem(_services_registry, service, lambda: True)
+            monkeypatch.setitem(CHECKS, service, lambda: True)
 
     return _stub

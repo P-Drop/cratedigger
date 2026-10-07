@@ -10,7 +10,11 @@ from cratedigger.core.request_context import request_id_var
 logger = logging.getLogger(__name__)
 
 
-def _resolve_request_id(raw: str | None) -> str:
+def resolve_request_id(raw: str | None) -> str:
+    """
+    Return the canonical form of a valid UUID,
+    or a new uuid4 otherwise.
+    """
     if not raw:
         return str(uuid.uuid4())
 
@@ -30,7 +34,7 @@ class RequestIdMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase:
-        req_id = _resolve_request_id(request.headers.get(self.REQUEST_HEADER))
+        req_id = resolve_request_id(request.headers.get(self.REQUEST_HEADER))
 
         token = request_id_var.set(req_id)
 
