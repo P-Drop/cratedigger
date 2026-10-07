@@ -2,7 +2,7 @@ import logging
 from collections.abc import Callable
 
 import pymongo
-from django.db import connection
+from django.db import connection, transaction
 
 from . import mongo
 
@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 def _healthcheck_postgres() -> bool:
     try:
-        with connection.cursor() as cursor:
+        with transaction.atomic(), connection.cursor() as cursor:
+            cursor.execute("SET LOCAL statement_timeout = '2s'")
             cursor.execute("SELECT 1;")
             cursor.fetchone()
 
