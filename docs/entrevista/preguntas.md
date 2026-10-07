@@ -34,9 +34,30 @@ Formato de cada entrada:
 - **Repregunta típica:** «Escribe un decorador que mida el tiempo de una función. ¿Qué pasa con el `__name__` de la función decorada y cómo lo arreglas?» (`functools.wraps`.)
 - **Mi respuesta:**
 
+### ¿Qué imprime una función con un diccionario como argumento por defecto, llamada varias veces? · `F1` · 🟡
+
+- **Puntos clave:**
+  - Los valores por defecto se evalúan **una vez**, al ejecutar el `def`, y se guardan en `funcion.__defaults__`. Todas las llamadas que no pasan el argumento comparten **el mismo objeto**.
+  - Si la función muta ese objeto y lo devuelve, todas las variables que reciben el resultado son alias: `a is b` es `True` y `len(a) == len(b)` siempre, aunque `a` se asignara «antes».
+  - Pasar el argumento de forma explícita (`{}`) no toca el valor por defecto.
+  - Arreglo idiomático: `registry=None` y `if registry is None: registry = {}`. No vale `registry or {}` si un diccionario vacío pasado a propósito debe conservarse.
+  - En «¿qué imprime?», la salida es la respuesta: hay que seguir el aliasing hasta el final, no solo explicar el mecanismo.
+- **Repregunta típica:** «¿Cuándo es útil a propósito un valor por defecto mutable?» (Una caché barata, aunque `functools.cache` es más claro.) «¿Y qué pasa con `def f(t=time.time())`?»
+- **Mi respuesta:**
+
 ## Django (fundamentos)
 
-_Todavía no hay preguntas._
+
+### Describe el recorrido de una petición en Django. ¿Qué cambia si mueves un middleware del primer puesto al último? · `F1` · 🟡
+
+- **Puntos clave:**
+  - Servidor WSGI → `environ` → `WSGIHandler` (`request_started`, construye el `HttpRequest`) → cadena de middlewares → resolución de la URL → `process_view` → vista con sus decoradores → respuesta de vuelta por los middlewares en orden inverso → `request_finished` al cerrar la respuesta.
+  - Modelo de cebolla: cada middleware envuelve al siguiente y puede **cortocircuitar** devolviendo una respuesta sin llamarlo.
+  - Las excepciones se convierten en respuestas en cada capa; los 4xx/5xx devueltos se registran en `django.request` **fuera** de la cadena.
+  - Un middleware situado al final no ve lo que cortocircuitan los anteriores (redirección a HTTPS, `APPEND_SLASH`, `DisallowedHost`): esas respuestas salen sin su cabecera y esos logs, sin su contexto. Afecta también **al cliente**.
+  - CSRF rechaza en `process_view`, que corre en la capa más interna: esa respuesta sí atraviesa todos los middlewares.
+- **Repregunta típica:** «¿Por qué `SecurityMiddleware` va casi el primero y `AuthenticationMiddleware` después de `SessionMiddleware`?» (Dependencia de datos: `request.user` se construye a partir de `request.session`, y es perezoso.)
+- **Mi respuesta:**
 
 ## ORM y SQL
 
@@ -72,6 +93,17 @@ _Todavía no hay preguntas._
   - Distinguir **detección** (llega tarde para un secreto) de **prevención** (lo impide).
 - **Mi respuesta:**
 
+### Se despliega con `DEBUG=True` y `ALLOWED_HOSTS=["*"]`. ¿Qué riesgos tiene cada uno? · `F1` · ✅
+
+- **Puntos clave:**
+  - `DEBUG=True`: páginas de error con traceback, código, variables locales, ajustes y versiones; el 404 lista las rutas. Además acumula todas las consultas en `connection.queries` (memoria).
+  - El filtrado de secretos de la página de error va **por nombre** del ajuste (`KEY`, `SECRET`, `PASS`, `TOKEN`…): una URL de conexión con la contraseña dentro se muestra entera.
+  - `ALLOWED_HOSTS` valida la cabecera `Host`, que controla el cliente y que Django usa para construir URLs absolutas. Con `"*"`: envenenamiento del enlace de recuperación de contraseña y de cachés.
+  - Con `DEBUG=False` y lista vacía, Django rechaza todas las peticiones: valor por defecto seguro.
+  - Prevención: `manage.py check --deploy` en el pipeline y validación del `Host` también en el proxy. Postmortem sin culpables: falla el proceso, no la persona.
+- **Repregunta típica:** «El balanceador hace health checks por IP y recibe un 400. ¿Cómo lo resuelves sin abrir `ALLOWED_HOSTS`?» (Configurar la cabecera `Host` del health check en el balanceador.)
+- **Mi respuesta:**
+
 ## PostgreSQL
 
 _Todavía no hay preguntas._
@@ -82,7 +114,18 @@ _Todavía no hay preguntas._
 
 ## Arquitectura y diseño
 
-_Todavía no hay preguntas._
+
+### ¿Por qué tu middleware solo acepta un `X-Request-ID` entrante si es un UUID? ¿Qué alternativas hay y cuándo te equivocas? · `F1` · 🟡
+
+- **Puntos clave:**
+  - Distinguir **aceptar** un id entrante de **generar** uno propio: son dos decisiones.
+  - A favor del UUID: validación trivial, formato y tamaño fijos, y devolver siempre `str(uuid.UUID(...))` elimina la inyección en logs por construcción.
+  - Alternativas de aceptación: generar siempre (pierdes la correlación con el cliente), lista blanca de caracteres con longitud máxima (más compatible, validación propia), o fiarse solo de un proxy de confianza.
+  - Un id entrante sirve para **correlacionar**, no garantiza **unicidad**: el cliente puede repetirlo.
+  - `uuid4` es aleatorio (122 bits): unicidad probabilística. `uuid7` lleva marca de tiempo, es ordenable y revela cuándo se creó.
+  - Cuándo falla: un proxy o un sistema de trazas con otro formato; sustituir su id rompe la correlación.
+- **Repregunta típica:** «¿En qué se diferencia un request id de una traza distribuida? ¿Qué es `traceparent`?»
+- **Mi respuesta:**
 
 ## Docker y DevOps (CI/CD, despliegue)
 
@@ -103,6 +146,18 @@ _Todavía no hay preguntas._
   - Truco de paridad: ejecutar `pre-commit run --all-files` dentro del workflow, para tener una única fuente de verdad de la lista de hooks.
   - Matiz que separa niveles: para el formato y los tipos, bloquear el merge resuelve. Para el secreto **no**: ya está en el remoto. Ahí hace falta prevención previa al push (push protection) y rotación.
 - **Repregunta típica:** «¿Y si el colaborador tiene permisos de admin en el repo?» (Reglas que aplican también a administradores, revisión obligatoria, CODEOWNERS.)
+- **Mi respuesta:**
+
+### Haces `docker compose down` y `up -d`: ¿qué se destruye y qué sobrevive? ¿Qué garantiza `depends_on`? · `F1` · ✅
+
+- **Puntos clave:**
+  - Imagen: plantilla inmutable por capas. Contenedor: proceso con una capa de escritura encima. Volumen: almacenamiento con ciclo de vida propio.
+  - `down` elimina contenedores (con su capa de escritura) y la red; imágenes y volúmenes sobreviven. `down -v` borra también los volúmenes.
+  - Las credenciales de las imágenes de BD solo se aplican al **inicializar** el volumen: cambiarlas en `.env` después provoca errores de autenticación.
+  - `depends_on` a secas solo ordena el arranque (contenedor iniciado, no listo). Con `condition: service_healthy` espera al healthcheck, **una vez**, al arrancar.
+  - Los healthchecks siguen ejecutándose cada `interval`; Compose marca el contenedor como `unhealthy` pero no actúa sobre los dependientes. `--wait` solo bloquea el comando hasta que todo esté `healthy`.
+  - La app debe tolerar la caída posterior de la BD: timeouts, reintentos y un readiness propio.
+- **Repregunta típica:** «Cambias `POSTGRES_PASSWORD`, haces `down` y `up`, y la app no autentica. ¿Por qué?»
 - **Mi respuesta:**
 
 ## Git
