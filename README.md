@@ -51,12 +51,12 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
 
 ### Requirements
 
-- uv v0.12.16+.
+- uv v0.12.16 or later.
 
     [Install uv from Astral](https://docs.astral.sh/uv/getting-started/installation/).
 
-- Docker
-- Docker Compose v2+
+- Docker Engine v25.0.0 or later
+- Docker Compose v2.20.2 or later
 
 ---
 
