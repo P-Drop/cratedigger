@@ -44,8 +44,6 @@ def test_health_rejects_post(client: Client) -> None:
     assert response.status_code == 405
 
 
-@pytest.mark.integration
-@pytest.mark.django_db
 def test_health_does_not_leak_exception_details(
     client: Client,
     caplog: pytest.LogCaptureFixture,
