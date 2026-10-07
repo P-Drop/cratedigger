@@ -125,7 +125,7 @@ addopts = [
 source = ["."]
 omit =[
     "*/migrations/*",
-    "*tests/*",
+    "*/tests/*",
     "manage.py",
     "config/asgi.py",
     "config/wsgi.py",
