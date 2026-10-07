@@ -2,7 +2,8 @@ import logging
 from collections.abc import Callable
 
 import pymongo
-from django.db import connection, transaction
+from django.db import DatabaseError, connection, transaction
+from pymongo.errors import PyMongoError
 
 from . import mongo
 
@@ -18,7 +19,7 @@ def _healthcheck_postgres() -> bool:
 
         return True
 
-    except Exception:
+    except DatabaseError:
         logger.exception("PostgreSQL healthcheck failed.")
         return False
 
@@ -31,7 +32,7 @@ def _healthcheck_mongo() -> bool:
 
         return True
 
-    except Exception:
+    except PyMongoError:
         logger.exception("MongoDB healthcheck failed.")
         return False
 
