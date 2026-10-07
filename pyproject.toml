@@ -7,9 +7,10 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "dj-database-url>=3.1.2",
     "django>=5.2,<6",
+    "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
+    "pymongo>=4.18.2",
 ]
 
 [dependency-groups]
@@ -52,7 +53,9 @@ select = [
     "DJ",        # reglas especificas de Django
     "S",         # flake8-bandit: seguridad
     "T20",       # print / pprint
-    "RUF"        # reglas propias de Ruff
+    "RUF",       # reglas propias de Ruff
+    "TRY401",    # evita logging de excepciones redundante
+    "G004"      # flake8-logging-format: evita f-stings en logger
 ]
 
 ignore = [
@@ -66,6 +69,7 @@ ignore = [
 # S106: para permitir credenciales como argumentos (falsas)
 "**/tests/**" = ["S101", "S105", "S106"]
 "**/tests.py" = ["S101", "S105", "S106"]
+"conftest.py" = ["S101", "S105", "S106"]
 
 [tool.ruff.format]
 # Activa el formateo del código de ejemplo en docstrings
@@ -116,16 +120,18 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-fail-under=85",
 ]
+markers=["integration: needs running Postgres/Mongo"]
 
 [tool.coverage.run]
 source = ["."]
 omit =[
     "*/migrations/*",
-    "*tests/*",
+    "*/tests/*",
     "manage.py",
     "config/asgi.py",
     "config/wsgi.py",
     "*/venv/*",
+    "conftest.py",
 ]
 
 [tool.coverage.report]

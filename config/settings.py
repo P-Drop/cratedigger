@@ -1,8 +1,10 @@
-import dj_database_url
+from pathlib import Path
 
-from .env import EnvSettings
+from .env import EnvSettings, MongoConfig
 
-env = EnvSettings()
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = EnvSettings(_env_file=BASE_DIR / ".env")
 
 SECRET_KEY = env.django_secret_key.get_secret_value()
 DEBUG = env.debug
@@ -18,9 +20,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "cratedigger.core",
+    "cratedigger.accounts",
 ]
 
 MIDDLEWARE = [
+    "cratedigger.core.middleware.RequestIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -53,7 +58,30 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {"default": dj_database_url.parse(env.database_url)}
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.postgres_db,
+        "USER": env.postgres_user,
+        "PASSWORD": env.postgres_password.get_secret_value(),
+        "HOST": env.postgres_host,
+        "PORT": env.postgres_port,
+        "OPTIONS": {
+            "connect_timeout": 2,
+        },
+    }
+}
+
+MONGODB = MongoConfig(
+    name=env.mongo_db,
+    user=env.mongo_user,
+    password=env.mongo_password,
+    host=env.mongo_host,
+    port=env.mongo_port,
+)
+
+# Custom User
+AUTH_USER_MODEL = "accounts.User"
 
 
 # Password validation
@@ -96,3 +124,42 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Logger
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_id_filter": {
+            "()": "cratedigger.core.request_context.RequestIdFilter",
+        },
+    },
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s"
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "filters": ["request_id_filter"],
+        }
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            # Replace DEFAULT_LOGGING handler, propagating to root handler
+            "handlers": [],
+            "level": "INFO",
+        },
+        "django.server": {
+            # INFO level covered by middleware access log
+            "level": "WARNING",
+            "propagate": True,
+        },
+    },
+}
