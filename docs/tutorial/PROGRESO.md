@@ -4,10 +4,10 @@
 
 ## Estado actual
 
-- **Fase actual:** 2 · CI y flujo de PRs (sin abrir)
-- **Estado:** ⬜ Pendiente de abrir. La Fase 1 está superada con 17/20.
-- **Siguiente paso:** mergear la [PR #1](https://github.com/P-Drop/cratedigger/pull/1) en `main`. Después, cuando digas, abro la Fase 2 con el repaso espaciado (2 preguntas) y el enunciado del reto.
-- **Última actualización:** 2026-10-07
+- **Fase actual:** 2 · CI y flujo de PRs
+- **Estado:** 🟦 En curso desde el 2026-10-08. Reto: [`retos/fase-02-ci.md`](retos/fase-02-ci.md).
+- **Siguiente paso:** crear la rama `feat/phase-02-ci`, commitear en ella los cambios de `docs/` de la apertura y empezar el reto. Repaso espaciado hecho (2026-10-09): lockfile 🟡, healthchecks 🟡.
+- **Última actualización:** 2026-10-09
 
 Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · 🔁 rehacer
 
@@ -17,7 +17,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 |---|---|---|---|---|
 | 0 · Setup profesional | ✅ | 19 | 2026-09-27 | — (commits directos en `main`) |
 | 1 · Infra y configuración | ✅ | 17 | 2026-10-07 | [#1](https://github.com/P-Drop/cratedigger/pull/1) |
-| 2 · CI y flujo de PRs | ⬜ | — | — | — |
+| 2 · CI y flujo de PRs | 🟦 | — | — | — |
 | 3 · Modelado del catálogo | ⬜ | — | — | — |
 | 4 · API del catálogo | ⬜ | — | — | — |
 | 5 · Auth, permisos y seguridad | ⬜ | — | — | — |
@@ -37,10 +37,10 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 
 | Tema | Origen | Aciertos |
 |---|---|---|
-| Qué garantiza un lockfile (grafo transitivo, hashes, resolución universal) y qué **no** garantiza (intérprete, librerías del sistema, compilador). Un contenedor comparte el kernel del host; la imagen solo es reproducible fijada por digest | F0 · P1 🟡 · repaso F1 🟡 (faltó la resolución universal; sobrestimó la reproducibilidad del contenedor) | 0 |
+| Qué garantiza un lockfile (grafo transitivo, hashes, resolución universal) y qué **no** garantiza (intérprete, librerías del sistema, compilador). Un contenedor comparte el kernel del host; la imagen solo es reproducible fijada por digest | F0 · P1 🟡 · repaso F1 🟡 (faltó la resolución universal; sobrestimó la reproducibilidad del contenedor) · repaso F2 🟡 (la 1.ª respuesta volvía a presentar Docker como garantía de entorno; la versión corregida llegó tras ver la valoración. Matiz: `--locked` falla si el lock está desfasado, `--frozen` no lo comprueba. Repregunta sobre *forking* ✅, mezclando bifurcación de versiones con selección de wheels) | 0 |
 | Secretos ya publicados: detección ≠ prevención. Rotar primero, luego limpiar historial; push protection como barrera previa. Matices: análisis de impacto en paralelo a la rotación, mínimo privilegio | F0 · P2, matiz no cubierto · repaso F1 ✅ | 1 |
 | Orden de los middlewares: qué pierde **el cliente** (no solo los logs) cuando una capa exterior cortocircuita; `process_view` y dónde rechaza CSRF. Describir el código propio tal como es, sin atribuirle arquitectura que aún no tiene | F1 · P1 🟡 | 0 |
-| Healthchecks de Docker: se ejecutan cada `interval` durante toda la vida del contenedor; lo que se evalúa una sola vez es la condición de `depends_on`. Qué hace y qué no hace `--wait` | F1 · P2, matiz fallado | 0 |
+| Healthchecks de Docker: se ejecutan cada `interval` durante toda la vida del contenedor; lo que se evalúa una sola vez es la condición de `depends_on`. Qué hace y qué no hace `--wait` | F1 · P2, matiz fallado · repaso F2 🟡 (ciclo de vida y `depends_on` ✅; ❌ creía que `start_period` retrasa el primer check; `--wait` sin el código de salida ni «implica `-d`». Repregunta 🟡: cálculo con `start_interval` exacto, pero sin él supuso `interval` en vez del valor por defecto de 5 s, medido: 5,3 s) | 0 |
 | Request id: política de **aceptación** frente a **generación**; correlación ≠ unicidad; `uuid4` es aleatorio (unicidad probabilística); `uuid7` | F1 · P4 🟡 | 0 |
 | Problemas de «¿qué imprime?»: seguir el aliasing hasta el final (si `a is b`, cualquier lectura de `a` ve lo que se hizo por `b`) | F1 · P5 🟡 | 0 |
 | Tests que pasan por el motivo equivocado: comprobar que un test falla cuando debe (quitar la fixture, romper el código); coste de un `except Exception` amplio | F1 · review, 2.ª ronda | 0 |
