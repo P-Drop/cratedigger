@@ -1,0 +1,42 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        ":enablePreCommit",
+        ":semanticCommits",
+        "schedule:weekly",
+        "helpers:pinGitHubActionDigests"
+    ],
+    "timezone": "Europe/Madrid",
+    "customManagers": [
+        {
+            "customType": "regex",
+            "description": "uv required-version, same source as the uv-pre-commit hook",
+            "managerFilePatterns": ["/(^|/)pyproject\\.toml$/"],
+            "matchStrings": ["required-version\\s*=\\s*\"==(?<currentValue>[^\"]+)\""],
+            "datasourceTemplate": "github-tags",
+            "depNameTemplate": "uv",
+            "packageNameTemplate": "astral-sh/uv-pre-commit"
+        },
+        {
+            "customType": "regex",
+            "description": "gitleaks version, same source as in pre-commit hook",
+            "managerFilePatterns": ["/(^|/)ci\\.yaml$/"],
+            "matchStrings": ["GITLEAKS_VERSION:\\s*\"(?<currentValue>[^\"]+)\""],
+            "extractVersionTemplate": "^v(?<version>.*)$",
+            "datasourceTemplate": "github-tags",
+            "depNameTemplate": "gitleaks",
+            "packageNameTemplate": "gitleaks/gitleaks"
+        }
+    ],
+    "packageRules": [
+        {
+            "matchPackageNames": ["astral-sh/uv-pre-commit"],
+            "groupName": "uv"
+        },
+        {
+            "matchPackageNames": ["gitleaks/gitleaks"],
+            "groupName": "gitleaks"
+        }
+    ]
+}
