@@ -1,0 +1,97 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+permissions: {}
+
+env:
+# Enforce --locked on every uv command, including uv run inside hooks
+  UV_LOCKED: 1
+
+jobs:
+
+  check-quality:
+    name: Check code quality
+    timeout-minutes: 15 # adjust after measure
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.python-version', '.pre-commit-config.yaml') }}
+
+      - name: Install Uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version-file: "./pyproject.toml"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Install project
+        run: uv sync
+
+      - name: Pre-commit (yaml)
+        run: uv run pre-commit run check-yaml --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (toml)
+        run: uv run pre-commit run check-toml --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (EOF)
+        run: uv run pre-commit run end-of-file-fixer --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (trailing whitespace)
+        run: uv run pre-commit run trailing-whitespace --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (merge conflicts)
+        run: uv run pre-commit run check-merge-conflict --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (large files)
+        run: uv run pre-commit run check-added-large-files --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (private key)
+        run: uv run pre-commit run detect-private-key --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (case conflits)
+        run: uv run pre-commit run check-case-conflict --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Pre-commit (line ending)
+        run: uv run pre-commit run mixed-line-ending --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Ruff (lint)
+        run: uv run pre-commit run ruff-check --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Ruff (format)
+        run: uv run pre-commit run ruff-format --all-files --show-diff-on-failure
+        if: ${{ !cancelled() }}
+
+      - name: Mypy
+        run: uv run pre-commit run mypy --all-files
+        if: ${{ !cancelled() }}
