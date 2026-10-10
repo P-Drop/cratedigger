@@ -15,6 +15,7 @@ repos:
       - id: trailing-whitespace
       - id: check-merge-conflict
       - id: check-added-large-files
+        args: ["--enforce-all"]
       - id: detect-private-key
       - id: check-case-conflict
       - id: mixed-line-ending
