@@ -42,6 +42,7 @@ line-length = 88
 # Excluir la configuración local de claude (.claude) es redundante
 # porque ruff respeta .gitignore.
 extend-exclude = ["**/migrations/*"]
+force-exclude = true
 
 [tool.ruff.lint]
 select = [
