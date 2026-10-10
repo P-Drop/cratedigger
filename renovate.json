@@ -37,6 +37,16 @@
         {
             "matchPackageNames": ["gitleaks/gitleaks"],
             "groupName": "gitleaks"
+        },
+        {
+            "description": "Breaking changes: open only after approval in the dashboard",
+            "matchUpdateTypes": ["major"],
+            "dependencyDashboardApproval": true
+        },
+        {
+            "description": "Python interpreter bumps change the runtime, approve manually",
+            "matchManagers": ["pyenv"],
+            "dependencyDashboardApproval": true
         }
     ]
 }
