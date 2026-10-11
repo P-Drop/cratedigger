@@ -1,7 +1,7 @@
 name: cratedigger
 services:
   postgres:
-    image: postgres:17.11-trixie
+    image: postgres:17.11-trixie@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
@@ -19,7 +19,8 @@ services:
       start_interval: 1s
 
   mongo:
-    image: mongo:7.0.43-jammy  # Issue mongo:8 kernel Linux -> https://jira.mongodb.org/browse/SERVER-121912
+    # Issue mongo:8 kernel Linux -> https://jira.mongodb.org/browse/SERVER-121912
+    image: mongo:7.0.43-jammy@sha256:f71f6d0913c945096cd058557cbadf4ad435007f378d84b3c4c636c928735e72
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?}
