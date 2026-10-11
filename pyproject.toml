@@ -120,11 +120,10 @@ addopts = [
     "--strict-markers",
     "--import-mode=importlib",
     "-ra",
-    # configuracion de cobertura temporal, despues ira solo en CI
     "--cov",
-    "--cov-report=html",
     "--cov-report=term-missing",
-    "--cov-fail-under=85",
+    # Threshold lives in [tool.coverage.report] fail_under.
+    # CI evaluates it on combined unit + integration data.
 ]
 markers=["integration: needs running Postgres/Mongo"]
 
@@ -148,3 +147,4 @@ exclude_lines =[
     "if TYPE_CHECKING:",
     "raise NotImplementedError",
 ]
+fail_under = 85
