@@ -47,6 +47,18 @@
             "description": "Python interpreter bumps change the runtime, approve manually",
             "matchManagers": ["pyenv"],
             "dependencyDashboardApproval": true
+        },
+        {
+            "description": "Keep mongo below 8 until SERVER-121912 is fixed",
+            "matchDatasources": ["docker"],
+            "matchPackageNames": ["mongo"],
+            "groupName": "mongo",
+            "allowedVersions": "<8"
+        },
+        {
+            "matchDatasources": ["docker"],
+            "matchPackageNames": ["postgres"],
+            "groupName": "postgres"
         }
     ]
 }
