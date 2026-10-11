@@ -121,3 +121,45 @@ jobs:
 
       - name: Scan full history
         run: gitleaks git --redact --verbose
+
+  unit-tests:
+    name: Unit tests
+    timeout-minutes: 15 # adjust after measure
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    env:
+      DJANGO_SECRET_KEY: ci
+      POSTGRES_DB: ci
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci
+      MONGO_DB: ci
+      MONGO_USER: ci
+      MONGO_PASSWORD: ci
+      COVERAGE_FILE: .coverage.unit
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version-file: "./pyproject.toml"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Install project
+        run: uv sync
+
+      - name: Run unit test suite
+        run: uv run pytest -m "not integration" --cov-fail-under=0
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-unit
+          path: ${{ env.COVERAGE_FILE }}
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
