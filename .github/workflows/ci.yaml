@@ -16,6 +16,13 @@ concurrency:
 permissions: {}
 
 env:
+  DJANGO_SECRET_KEY: ci
+  POSTGRES_DB: ci
+  POSTGRES_USER: ci
+  POSTGRES_PASSWORD: ci
+  MONGO_DB: ci
+  MONGO_USER: ci
+  MONGO_PASSWORD: ci
 # Enforce --locked on every uv command, including uv run inside hooks
   UV_LOCKED: 1
 
@@ -129,13 +136,6 @@ jobs:
       contents: read
     runs-on: ubuntu-24.04
     env:
-      DJANGO_SECRET_KEY: ci
-      POSTGRES_DB: ci
-      POSTGRES_USER: ci
-      POSTGRES_PASSWORD: ci
-      MONGO_DB: ci
-      MONGO_USER: ci
-      MONGO_PASSWORD: ci
       COVERAGE_FILE: .coverage.unit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -171,13 +171,6 @@ jobs:
       contents: read
     runs-on: ubuntu-24.04
     env:
-      DJANGO_SECRET_KEY: ci
-      POSTGRES_DB: ci
-      POSTGRES_USER: ci
-      POSTGRES_PASSWORD: ci
-      MONGO_DB: ci
-      MONGO_USER: ci
-      MONGO_PASSWORD: ci
       COVERAGE_FILE: .coverage.integration
     services:
       postgres:
