@@ -30,7 +30,7 @@ jobs:
 
   check-quality:
     name: Check code quality
-    timeout-minutes: 15 # adjust after measure
+    timeout-minutes: 5
     permissions:
       contents: read
     runs-on: ubuntu-24.04
@@ -105,7 +105,7 @@ jobs:
 
   detect-secrets:
     name: Detect leaked secrets
-    timeout-minutes: 15 # adjust after measure
+    timeout-minutes: 5
     permissions:
       contents: read
     runs-on: ubuntu-24.04
@@ -131,7 +131,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    timeout-minutes: 15 # adjust after measure
+    timeout-minutes: 5
     permissions:
       contents: read
     runs-on: ubuntu-24.04
@@ -166,7 +166,7 @@ jobs:
 
   integration-tests:
     name: Integration tests
-    timeout-minutes: 15 # adjust after measure
+    timeout-minutes: 10
     permissions:
       contents: read
     runs-on: ubuntu-24.04
@@ -232,7 +232,7 @@ jobs:
   check-coverage:
     name: Check coverage threshold
     needs: [unit-tests, integration-tests]
-    timeout-minutes: 15 # adjust after measure
+    timeout-minutes: 5
     permissions:
       contents: read
     runs-on: ubuntu-24.04
