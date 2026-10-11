@@ -163,3 +163,75 @@ jobs:
           if-no-files-found: error
           retention-days: 1
           include-hidden-files: true
+
+  integration-tests:
+    name: Integration tests
+    timeout-minutes: 15 # adjust after measure
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    env:
+      DJANGO_SECRET_KEY: ci
+      POSTGRES_DB: ci
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci
+      MONGO_DB: ci
+      MONGO_USER: ci
+      MONGO_PASSWORD: ci
+      COVERAGE_FILE: .coverage.integration
+    services:
+      postgres:
+        image: postgres:17.11-trixie@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        ports:
+          - "127.0.0.1:5432:5432"
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U $POSTGRES_USER -d $POSTGRES_DB"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 30s
+          --health-start-interval 1s
+      mongo:
+        image: mongo:7.0.43-jammy@sha256:f71f6d0913c945096cd058557cbadf4ad435007f378d84b3c4c636c928735e72
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ env.MONGO_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ env.MONGO_PASSWORD }}
+        ports:
+          - "127.0.0.1:27017:27017"
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'quit(db.adminCommand({ping: 1}).ok ? 0 : 1)'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 30s
+          --health-start-interval 1s
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version-file: "./pyproject.toml"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Install project
+        run: uv sync
+
+      - name: Run integration test suite
+        run: uv run pytest -m integration --cov-fail-under=0
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-integration
+          path: ${{ env.COVERAGE_FILE }}
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
