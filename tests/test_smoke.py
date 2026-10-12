@@ -8,4 +8,4 @@ def test_django_check() -> None:
 
 
 def test_database_backend_is_postgresql() -> None:
-    assert connection.vendor == "postgresql"
+    assert connection.vendor == "funkydb"
