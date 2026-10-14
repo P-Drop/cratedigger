@@ -83,7 +83,7 @@ jobs:
         run: uv run pre-commit run detect-private-key --all-files --show-diff-on-failure
         if: ${{ !cancelled() }}
 
-      - name: Pre-commit (case conflits)
+      - name: Pre-commit (case conflicts)
         run: uv run pre-commit run check-case-conflict --all-files --show-diff-on-failure
         if: ${{ !cancelled() }}
 

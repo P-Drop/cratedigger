@@ -58,7 +58,7 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
 
 ### Requirements
 
-- uv v0.12.19 (exact version, pinned in `pyproject.toml).
+- uv v0.12.19 (exact version, pinned in `pyproject.toml`).
 
     [Install uv from Astral](https://docs.astral.sh/uv/getting-started/installation/).
 
