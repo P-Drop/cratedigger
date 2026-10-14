@@ -396,10 +396,11 @@ Por tanto los hooks que no se reutilizan en CI, o que se utilizan de otra manera
 
 - El hook de gitleaks comprueba el *staging*, por lo que escanearía **cero commits**. Lo sustituye el job que escanea el historial completo.
 
-- `conventional-pre-commit` es del stage `commit-msg` y no se puede ejecutar con `pre-commit run` como el resto de hooks. Con *merge commit*, los mensajes llegan a `main` y en este momento no tienen un validador en el servidor. Aquí hay una deuda técnica pendiente.
+<!-- - `conventional-pre-commit` es del stage `commit-msg` y no se puede ejecutar con `pre-commit run` como el resto de hooks. Con *merge commit*, los mensajes llegan a `main` y en este momento no tienen un validador en el servidor. Aquí hay una deuda técnica pendiente. -->
 
 - Todos los hooks u opciones de hooks que modifican archivos, en CI funcionan estrictamente como comprobaciones (`--show-diff-on-failure`). Si tuvieran que cambiar algo, fallan y muestran el error.
 
+Para evitar una lista duplicada de herramientas de validación en `pre-commit` y CI, se utiliza un step en el run que ejecuta todos los hooks, definiendo las excepciones en el archivo `.pre-commit-config.yaml` con la opción `ci: skip: [uv-lock, gitleaks]` (no es necesario excluir `uv-sync` porque es un hook de `post-checkout`, y `conventional-pre-commit` de `commit-msg`). Aunque se ejecuten en un único step, cada comprobación en CI se seguirá mostrando como `Passed` / `Failed`, para descubrir los fallos directamente.
 
 Las comprobaciones de pre-commit se pueden saltar, con la opción `--no-verify` en el commit. Las comprobaciones de CI son la validación real para la rama principal del código del repositorio.
 
@@ -449,7 +450,7 @@ Los riesgos que acepto con la opción de fijar la action con SHA:
 
 4. ¿Qué diferencia hay entre los eventos `pull_request` y `pull_request_target`? ¿Por qué importa en un repo público que acepta PRs desde forks, y qué tiene que ver con que tu CI no necesite secretos?
 
-Estos triggers se ejecutan al realizar o actualizar una PR, pero la diferencia está en el contexto de ejecución: `pull_request` se ejecuta en un contexto simulado del merge (rama base + PR), mientras que `pull_request_target` se ejecuta directamente en el contexto de la rama base. Esto implica que la segunda opción es más delicada y menos segura, ya que proporciona acceso al código base y también a los secretos del repositorio, con permisos de escritura para el GITHUB_TOKEN. Existe el riesgo de **pwn request**, donde un workflow con `pull_request_target` hace checkout del código de la PR y se ejecuta con privilegios. Por ello debe ser usada solo para tareas de gestión que necesitan permisos y no ejecutan el código fuente del usuario.
+Estos triggers se ejecutan al realizar o actualizar una PR, pero la diferencia está en el contexto de ejecución: `pull_request` se ejecuta en un contexto simulado del merge (rama base + PR), mientras que `pull_request_target` se ejecuta directamente en el contexto de la rama base. Esto implica que la segunda opción es más delicada y menos segura, ya que proporciona acceso al código base y también a los secretos del repositorio, con los permisos de escritura para el GITHUB_TOKEN en un contexto privilegiado. Existe el riesgo de **pwn request**, donde un workflow con `pull_request_target` hace checkout del código de la PR y se ejecuta con privilegios. Por ello debe ser usada solo para tareas de gestión que necesitan permisos y no ejecutan el código fuente del usuario.
 
 En un repositorio público, cualquier usuario puede hacer un fork y enviar una PR. Por tanto, el workflow de CI debe ejecutarse en un entorno que acepte la ejecución de código no confiable, sin proporcionar acceso a los secretos de Github ni permisos sobre el código y la configuración del repositorio.
 

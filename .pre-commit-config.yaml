@@ -64,3 +64,9 @@ repos:
         # Añado el tipo de commit personalizado 'learn' para respuestas a Claude
         # en commits que no cambian el código.
         args: [build, chore, ci, docs, feat, fix, learn, perf, refactor, revert, style, test]
+
+
+ci:
+  # Hooks the CI workflow skips: gitleaks scans only staged files (the
+  # full-history job replaces it) and uv-lock duplicates `uv sync --locked`.
+  skip: [uv-lock, gitleaks]
