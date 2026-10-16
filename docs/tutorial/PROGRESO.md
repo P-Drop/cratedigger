@@ -5,9 +5,9 @@
 ## Estado actual
 
 - **Fase actual:** 2 · CI y flujo de PRs
-- **Estado:** 🟦 En curso desde el 2026-10-08. Reto: [`retos/fase-02-ci.md`](retos/fase-02-ci.md).
-- **Siguiente paso:** crear la rama `feat/phase-02-ci`, commitear en ella los cambios de `docs/` de la apertura y empezar el reto. Repaso espaciado hecho (2026-10-09): lockfile 🟡, healthchecks 🟡.
-- **Última actualización:** 2026-10-09
+- **Estado:** 🟨 En review desde el 2026-10-14 ([PR #2](https://github.com/P-Drop/cratedigger/pull/2)). Reto: [`retos/fase-02-ci.md`](retos/fase-02-ci.md).
+- **Siguiente paso:** corregir los hallazgos de la primera ronda de review (sin 🔴; 3 🟡). Después, mergear, instalar Renovate y cerrar su criterio de aceptación; luego, la mini-entrevista.
+- **Última actualización:** 2026-10-14
 
 Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · 🔁 rehacer
 
@@ -17,7 +17,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 |---|---|---|---|---|
 | 0 · Setup profesional | ✅ | 19 | 2026-09-27 | — (commits directos en `main`) |
 | 1 · Infra y configuración | ✅ | 17 | 2026-10-07 | [#1](https://github.com/P-Drop/cratedigger/pull/1) |
-| 2 · CI y flujo de PRs | 🟦 | — | — | — |
+| 2 · CI y flujo de PRs | 🟨 | — | — | [#2](https://github.com/P-Drop/cratedigger/pull/2) |
 | 3 · Modelado del catálogo | ⬜ | — | — | — |
 | 4 · API del catálogo | ⬜ | — | — | — |
 | 5 · Auth, permisos y seguridad | ⬜ | — | — | — |
