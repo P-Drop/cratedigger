@@ -15,6 +15,7 @@ repos:
       - id: trailing-whitespace
       - id: check-merge-conflict
       - id: check-added-large-files
+        args: ["--enforce-all"]
       - id: detect-private-key
       - id: check-case-conflict
       - id: mixed-line-ending
@@ -26,15 +27,23 @@ repos:
       - id: uv-sync
         args: ["--locked"]
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.8
-    hooks:
-      - id: ruff-check
-        args: [ --fix, --exit-non-zero-on-fix ]
-      - id: ruff-format
-
   - repo: local
     hooks:
+      - id: ruff-check
+        name: ruff-check
+        entry: uv run ruff check
+        args: [ --fix, --exit-non-zero-on-fix ]
+        require_serial: true
+        language: system
+        types_or: [python, pyi]
+
+      - id: ruff-format
+        name: ruff-format
+        entry: uv run ruff format
+        require_serial: true
+        language: system
+        types_or: [python, pyi]
+
       - id: mypy
         name: mypy
         entry: uv run mypy .
@@ -55,3 +64,9 @@ repos:
         # Añado el tipo de commit personalizado 'learn' para respuestas a Claude
         # en commits que no cambian el código.
         args: [build, chore, ci, docs, feat, fix, learn, perf, refactor, revert, style, test]
+
+
+ci:
+  # Hooks the CI workflow skips: gitleaks scans only staged files (the
+  # full-history job replaces it) and uv-lock duplicates `uv sync --locked`.
+  skip: [uv-lock, gitleaks]
