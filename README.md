@@ -218,6 +218,7 @@ PRs coming from forks require extra approval by admin to run CI.
     - Unit tests.
     - Integration tests.
     - Check coverage threshold.
+    - Check commit messages.
 
 - Ruleset for all users, admin included.
 

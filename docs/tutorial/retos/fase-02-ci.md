@@ -308,6 +308,10 @@ permissions: contents: read
           {
             "context": "Check coverage threshold",
             "integration_id": 15368
+          },
+          {
+            "context": "Check commit messages",
+            "integration_id": 15368
           }
         ]
       }
@@ -387,6 +391,8 @@ De estos, todos utilizan un repositorio remoto excepto Ruff y Mypy que utilizan 
 
 - Gitleaks se ejecuta en CI como medida de detección de la filtración. No es preventivo, porque cuando se ejecuta el workflow, el código (y los secretos filtrados) ya está en la rama remota del repositorio. La ejecución es diferente: en pre-commit, gitleaks utiliza el repositorio en el hook, mientras que en CI realiza una instalación de la herramienta con comprobación del checksum y escanea todo el historial del repositorio. Ambas versiones también se deben mantener sincronizadas, he configurado Renovate para ello.
 
+- La comprobación de Conventional Commits se realiza también en CI en su propio job (requiere `fetch-depth: 0`). Además también se comprueba la longitud máxima de 72 caracteres en el asunto del commit.
+
 
 Por tanto los hooks que no se reutilizan en CI, o que se utilizan de otra manera son:
 
@@ -396,7 +402,7 @@ Por tanto los hooks que no se reutilizan en CI, o que se utilizan de otra manera
 
 - El hook de gitleaks comprueba el *staging*, por lo que escanearía **cero commits**. Lo sustituye el job que escanea el historial completo.
 
-<!-- - `conventional-pre-commit` es del stage `commit-msg` y no se puede ejecutar con `pre-commit run` como el resto de hooks. Con *merge commit*, los mensajes llegan a `main` y en este momento no tienen un validador en el servidor. Aquí hay una deuda técnica pendiente. -->
+- `conventional-pre-commit` es del stage `commit-msg` y no se puede ejecutar con `pre-commit run` como el resto de hooks. Con *merge commit*, los mensajes llegan a `main` y en este momento no tienen un validador en el servidor. Aquí hay una deuda técnica pendiente.
 
 - Todos los hooks u opciones de hooks que modifican archivos, en CI funcionan estrictamente como comprobaciones (`--show-diff-on-failure`). Si tuvieran que cambiar algo, fallan y muestran el error.
 
@@ -417,6 +423,7 @@ He configurado varios jobs, agrupando los steps por su propósito concreto:
 - `Unit tests`
 - `Integration tests`
 - `Check coverage threshold`
+- `Check commit messages`
 
 De esta forma, la configuración de cada job se puede adaptar a sus necesidades concretas (p.ej. los servicios de postgres y mongo solo se instalan el job de tests de integración, que es el único que lo necesita). Aunque la configuración es más compleja, queda más legible con steps agrupados que con una lista enorme de steps para un solo job. Además los fallos quedan más localizados, y aseguran que se producen en las condiciones que prueba el job. Hay configuraciones globales, como las variables de entorno que se repiten en varios jobs o los permisos por defecto. El inconveniente de definir las variables de entorno globales, es que también se encuentran accesibles para los jobs que no los requieren, como el la detección de filtración de secretos. Se acepta este trade-off a cambio de simplificar y no repetir código, siendo los valores de las variables falsos y desechables.
 
@@ -471,6 +478,8 @@ De los cinco jobs que he definido en el workflow, he marcado todos como checks o
 - `Unit tests` e `Integration tests`: Suites de test que comprueban las funcionalidades de la aplicación. Es obligatorio que el código que llegue a main no rompa los tests.
 
 - `Check coverage threshold`: Mide el porcentaje de la base de código cubierta por los módulos de test. El umbral permite flexibilidad, se puede implementar código nuevo sin pruebas, pero al menos un 85% de la base de código debe estar cubierta en main. Hacerlo obligatorio ha requerido reflexión, porque el job depende de los jobs de tests, entonces podría omitir la obligatoriedad de esos jobs. Pero el punto está en queda como **skipped** si falla un job de test, que para los checks cuenta como **success**. Por eso este y los dos jobs de tests deben ser obligatorios.
+
+- `Check commit messages`: Comprueba que los mensajes de commit siguen el estándar definido de Conventional Commits (reutilizando el hook) y también verifica que el asunto no excede de 72 caracteres.
 
 Para un check obligatorio en el que un job no llega a ejecutarse (como en el ejemplo del filtro de rutas, donde el cambio no se produce en la ruta y no ejecuta sus jobs), el estado que queda es **pending** para siempre. La PR no acepta el merge porque se queda bloqueada por el estado de un check que nunca se va a ejecutar. Es un problema conocido en devops y tiene soluciones concretas, como aplicar condicionales en el workflow para que quede **skipped** (equivale a **success** para el check) o Dummy Workflows.
 

@@ -16,8 +16,9 @@ El detalle de cada decisión, las pruebas y las alternativas analizadas están e
 
 ### 1. El CI es la barrera real y `main` está protegida por un ruleset
 
-- Workflow de GitHub Actions en `pull_request` y `push` a `main`, con cinco jobs separados por responsabilidad: calidad, escaneo de secretos en todo el historial, tests unitarios **sin** servicios, tests de integración con PostgreSQL y MongoDB como *service containers*, y cobertura combinada.
-- Los cinco checks son obligatorios en un ruleset sobre `main`, con su origen fijado a GitHub Actions. El ruleset exige PR, prohíbe el *force push* y el borrado, exige que la rama esté al día con `main` y **no tiene excepciones**, tampoco para mí como administrador.
+- Workflow de GitHub Actions en `pull_request` y `push` a `main`, con seis jobs separados por responsabilidad: calidad, escaneo de secretos en todo el historial, tests unitarios **sin** servicios, tests de integración con PostgreSQL y MongoDB como *service containers*, cobertura combinada y comprobación de los mensajes de commit.
+- El workflow reutiliza los hooks definidos en `.pre-commit-config.yaml`. Para no repetir la lista ejecuta todos los hooks, por lo que se configura una lista de excepciones con `ci: skip: [uv-lock, gitleaks]`. En caso de añadir hooks que validan en CI no se requiere actualización, se añaden a esta lista solamente los hooks estrictamente locales.
+- Los seis checks son obligatorios en un ruleset sobre `main`, con su origen fijado a GitHub Actions. El ruleset exige PR, prohíbe el *force push* y el borrado, exige que la rama esté al día con `main` y **no tiene excepciones**, tampoco para mí como administrador.
 - El umbral de cobertura (85 %) vive en `[tool.coverage.report] fail_under` y se evalúa una sola vez, sobre los datos combinados de los tests unitarios y de integración.
 - El CI no usa secretos: las variables de configuración son valores falsos y desechables. Las PRs de contribuidores externos requieren aprobación antes de ejecutar el workflow.
 
@@ -58,7 +59,7 @@ El detalle de cada decisión, las pruebas y las alternativas analizadas están e
 
 ### Trade-off
 
-- El historial de `main` no es lineal, y cada commit de la rama debe estar limpio antes de la review. Los mensajes de commit solo se validan con el hook local: falta un check en el CI.
+- El historial de `main` no es lineal, y cada commit de la rama debe estar limpio antes de la review.
 - Exigir la rama al día obliga a hacer *rebase* y a repetir el CI cada vez que `main` avanza. Con un solo desarrollador el coste es mínimo, pero escalaría mal con muchas PRs simultáneas.
 - Renovate es una app de terceros con permiso de escritura en el repositorio. Su configuración (`customManagers`, reglas de agrupación y aprobación) añade complejidad.
 - Quedan pasos manuales: actualizar el hash SHA-256 de gitleaks en cada nueva versión (la PR de Renovate falla hasta hacerlo) e instalar localmente la versión exacta de uv.
