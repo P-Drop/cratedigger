@@ -40,7 +40,7 @@ Estos temas no son fases: se trabajan en todas ellas.
 |---|---|
 | Tests y tipado | Cada PR trae tests (reglas y casos borde) y pasa mypy strict. La cobertura mínima es del 85 %. |
 | Bruno | A partir de la F4, cada endpoint nuevo tiene su request con aserciones y la colección se ejecuta por CLI. |
-| Documentación | El README se mantiene al día. Los ADRs recogen las decisiones importantes: 0001 arquitectura, 0002 modelado, 0003 autenticación, 0004 letras, 0005 despliegue. |
+| Documentación | El README se mantiene al día. Los ADRs recogen las decisiones importantes y se numeran por orden de creación: 0001 arquitectura y 0002 CI y flujo de PRs; después vendrán modelado, autenticación, letras y despliegue. |
 | Secretos | F0: escaneo en pre-commit → F1: variables de entorno y `.env.example` → F2: CI sin secretos reales → F5: clave de firma de los JWT → F10: nada en la imagen → F13: gestor de secretos y rotación. |
 | Git | Conventional Commits, una PR por reto e historial limpio. |
 | Python core | Cada mini-entrevista incluye una pregunta de Python conectada con la fase. |
@@ -151,7 +151,7 @@ Estos temas no son fases: se trabajan en todas ellas.
 
 **Reto**
 - Los modelos `Artist`, `Membership`, `Label`, `Release`, `Track` y `Credit`.
-- **ADR-0002** con un diagrama ER en Mermaid. Debe responder:
+- Un **ADR de modelado** con un diagrama ER en Mermaid. Debe responder:
   - ¿Un grupo es un `Artist` más o un modelo aparte?
   - ¿Cómo se modelan los créditos y los roles?
 - Las invariantes van en la BD:
@@ -234,7 +234,7 @@ Estos temas no son fases: se trabajan en todas ellas.
 - Throttling para anónimos y para usuarios, con un scope más estricto en las escrituras.
 - CORS configurado para un frontend hipotético.
 - `manage.py check --deploy` limpio con la configuración de producción.
-- **ADR-0003**: la estrategia de autenticación y dónde guardaría el token un frontend.
+- Un **ADR de autenticación**: la estrategia de autenticación y dónde guardaría el token un frontend.
 - La matriz de permisos (rol × endpoint × método → código esperado), testeada con `parametrize`.
 
 **Criterios clave:**
@@ -359,7 +359,7 @@ Estos temas no son fases: se trabajan en todas ellas.
 - **Reconocimiento, sin código**: con `mongosh` dentro del contenedor, practicar insert, find con proyecciones, operadores de actualización, índices y `explain()`.
 - Un modelo de documento para letras al estilo Genius:
   - Estructura: pista (el `track_id` de Postgres) → secciones (intro, verso, estribillo, con el artista que las interpreta) → líneas → anotaciones y votos.
-  - **ADR-0004**: qué va embebido y qué va referenciado, teniendo en cuenta el límite de 16 MB y el crecimiento de los arrays.
+  - Un **ADR de letras**: qué va embebido y qué va referenciado, teniendo en cuenta el límite de 16 MB y el crecimiento de los arrays.
 - El puerto `LyricsRepository` (`typing.Protocol`), con:
   - Un adaptador PyMongo que reutiliza un único `MongoClient`.
   - Un fake en memoria.
@@ -486,7 +486,7 @@ Estos temas no son fases: se trabajan en todas ellas.
 **Objetivo:** una URL pública para el portafolio, desplegada de forma automática y segura.
 
 **Reto**
-- La plataforma (Render, Koyeb, Fly.io, Railway…) se elige según el free tier vigente y se justifica en el **ADR-0005**.
+- La plataforma (Render, Koyeb, Fly.io, Railway…) se elige según el free tier vigente y se justifica en un **ADR de despliegue**.
 - PostgreSQL gestionado, MongoDB Atlas en su tier gratuito y Redis gestionado si hay Celery.
 - Los secretos viven en el gestor de la plataforma y en GitHub; ninguno en el repo ni en la imagen.
 - CD: al mergear en `main` con el CI en verde se despliega de forma automática, y las migraciones son un paso del despliegue.
