@@ -226,3 +226,47 @@ jobs:
       - name: Coverage summary
         if: ${{ !cancelled() }}
         run: uv run coverage report --format=markdown --fail-under=0 >> "$GITHUB_STEP_SUMMARY"
+
+  check-commits:
+    name: Check commit messages
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version-file: "./pyproject.toml"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Install project
+        run: uv sync
+
+      - name: Validate commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          status=0
+          for sha in $(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA"); do
+            subject="$(git log -1 --format=%s "$sha")"
+            git log -1 --format=%B "$sha" > "$RUNNER_TEMP/commit-msg"
+            if ! uv run pre-commit run conventional-pre-commit \
+                --hook-stage commit-msg --commit-msg-filename "$RUNNER_TEMP/commit-msg"; then
+              echo "::error::Not conventional: ${sha:0:7} $subject"
+              status=1
+            fi
+            if [ "${#subject}" -gt 72 ]; then
+              echo "::error::Subject over 72 chars (${#subject}): ${sha:0:7} $subject"
+              status=1
+            fi
+          done
+          exit "$status"
