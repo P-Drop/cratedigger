@@ -308,6 +308,10 @@ permissions: contents: read
           {
             "context": "Check coverage threshold",
             "integration_id": 15368
+          },
+          {
+            "context": "Check commit messages",
+            "integration_id": 15368
           }
         ]
       }
@@ -387,6 +391,8 @@ De estos, todos utilizan un repositorio remoto excepto Ruff y Mypy que utilizan 
 
 - Gitleaks se ejecuta en CI como medida de detección de la filtración. No es preventivo, porque cuando se ejecuta el workflow, el código (y los secretos filtrados) ya está en la rama remota del repositorio. La ejecución es diferente: en pre-commit, gitleaks utiliza el repositorio en el hook, mientras que en CI realiza una instalación de la herramienta con comprobación del checksum y escanea todo el historial del repositorio. Ambas versiones también se deben mantener sincronizadas, he configurado Renovate para ello.
 
+- La comprobación de Conventional Commits se realiza también en CI en su propio job (requiere `fetch-depth: 0`). Además, se comprueba la longitud máxima de 72 caracteres en el asunto del commit.
+
 
 Por tanto los hooks que no se reutilizan en CI, o que se utilizan de otra manera son:
 
@@ -396,10 +402,11 @@ Por tanto los hooks que no se reutilizan en CI, o que se utilizan de otra manera
 
 - El hook de gitleaks comprueba el *staging*, por lo que escanearía **cero commits**. Lo sustituye el job que escanea el historial completo.
 
-- `conventional-pre-commit` es del stage `commit-msg` y no se puede ejecutar con `pre-commit run` como el resto de hooks. Con *merge commit*, los mensajes llegan a `main` y en este momento no tienen un validador en el servidor. Aquí hay una deuda técnica pendiente.
+- `conventional-pre-commit` es del stage `commit-msg`, así que `pre-commit run --all-files` no lo ejecuta. El job `Check commit messages` lo invoca para cada commit de la PR con `--hook-stage commit-msg --commit-msg-filename`.
 
 - Todos los hooks u opciones de hooks que modifican archivos, en CI funcionan estrictamente como comprobaciones (`--show-diff-on-failure`). Si tuvieran que cambiar algo, fallan y muestran el error.
 
+Para evitar una lista duplicada de herramientas de validación en `pre-commit` y CI, se utiliza un step en el run que ejecuta todos los hooks, definiendo las excepciones en el archivo `.pre-commit-config.yaml` con la opción `ci: skip: [uv-lock, gitleaks]` (no es necesario excluir `uv-sync` porque es un hook de `post-checkout`, y `conventional-pre-commit` de `commit-msg`). Aunque se ejecuten en un único step, cada comprobación en CI se seguirá mostrando como `Passed` / `Failed`, para descubrir los fallos directamente.
 
 Las comprobaciones de pre-commit se pueden saltar, con la opción `--no-verify` en el commit. Las comprobaciones de CI son la validación real para la rama principal del código del repositorio.
 
@@ -416,6 +423,7 @@ He configurado varios jobs, agrupando los steps por su propósito concreto:
 - `Unit tests`
 - `Integration tests`
 - `Check coverage threshold`
+- `Check commit messages`
 
 De esta forma, la configuración de cada job se puede adaptar a sus necesidades concretas (p.ej. los servicios de postgres y mongo solo se instalan el job de tests de integración, que es el único que lo necesita). Aunque la configuración es más compleja, queda más legible con steps agrupados que con una lista enorme de steps para un solo job. Además los fallos quedan más localizados, y aseguran que se producen en las condiciones que prueba el job. Hay configuraciones globales, como las variables de entorno que se repiten en varios jobs o los permisos por defecto. El inconveniente de definir las variables de entorno globales, es que también se encuentran accesibles para los jobs que no los requieren, como el la detección de filtración de secretos. Se acepta este trade-off a cambio de simplificar y no repetir código, siendo los valores de las variables falsos y desechables.
 
@@ -449,7 +457,7 @@ Los riesgos que acepto con la opción de fijar la action con SHA:
 
 4. ¿Qué diferencia hay entre los eventos `pull_request` y `pull_request_target`? ¿Por qué importa en un repo público que acepta PRs desde forks, y qué tiene que ver con que tu CI no necesite secretos?
 
-Estos triggers se ejecutan al realizar o actualizar una PR, pero la diferencia está en el contexto de ejecución: `pull_request` se ejecuta en un contexto simulado del merge (rama base + PR), mientras que `pull_request_target` se ejecuta directamente en el contexto de la rama base. Esto implica que la segunda opción es más delicada y menos segura, ya que proporciona acceso al código base y también a los secretos del repositorio, con permisos de escritura para el GITHUB_TOKEN. Existe el riesgo de **pwn request**, donde un workflow con `pull_request_target` hace checkout del código de la PR y se ejecuta con privilegios. Por ello debe ser usada solo para tareas de gestión que necesitan permisos y no ejecutan el código fuente del usuario.
+Estos triggers se ejecutan al realizar o actualizar una PR, pero la diferencia está en el contexto de ejecución: `pull_request` se ejecuta en un contexto simulado del merge (rama base + PR), mientras que `pull_request_target` se ejecuta directamente en el contexto de la rama base. Esto implica que la segunda opción es más delicada y menos segura, ya que proporciona acceso al código base y también a los secretos del repositorio, con los permisos de escritura para el GITHUB_TOKEN en un contexto privilegiado. Existe el riesgo de **pwn request**, donde un workflow con `pull_request_target` hace checkout del código de la PR y se ejecuta con privilegios. Por ello debe ser usada solo para tareas de gestión que necesitan permisos y no ejecutan el código fuente del usuario.
 
 En un repositorio público, cualquier usuario puede hacer un fork y enviar una PR. Por tanto, el workflow de CI debe ejecutarse en un entorno que acepte la ejecución de código no confiable, sin proporcionar acceso a los secretos de Github ni permisos sobre el código y la configuración del repositorio.
 
@@ -461,7 +469,7 @@ De esta manera, puedo confiar en que el código de un fork se evalúa en el work
 
 5. ¿Qué checks marcaste como obligatorios en el ruleset y por qué esos? ¿Qué pasa con un check obligatorio si su job no llega a ejecutarse (por un filtro de rutas, por ejemplo)? ¿Exiges que la rama esté al día con `main` antes de mergear? ¿Qué coste tiene?
 
-De los cinco jobs que he definido en el workflow, he marcado todos como checks obligatorios en el ruleset. Los motivos son los siguientes:
+De los seis jobs que he definido en el workflow, he marcado todos como checks obligatorios en el ruleset. Los motivos son los siguientes:
 
 - `Check code quality`: Comprueba el estilo, el formato, el tipado, las reglas de ruff, pre-commit... Si no es obligatorio, un PR con código que no respete mis reglas de calidad puede llegar a main.
 
@@ -470,6 +478,8 @@ De los cinco jobs que he definido en el workflow, he marcado todos como checks o
 - `Unit tests` e `Integration tests`: Suites de test que comprueban las funcionalidades de la aplicación. Es obligatorio que el código que llegue a main no rompa los tests.
 
 - `Check coverage threshold`: Mide el porcentaje de la base de código cubierta por los módulos de test. El umbral permite flexibilidad, se puede implementar código nuevo sin pruebas, pero al menos un 85% de la base de código debe estar cubierta en main. Hacerlo obligatorio ha requerido reflexión, porque el job depende de los jobs de tests, entonces podría omitir la obligatoriedad de esos jobs. Pero el punto está en queda como **skipped** si falla un job de test, que para los checks cuenta como **success**. Por eso este y los dos jobs de tests deben ser obligatorios.
+
+- `Check commit messages`: Comprueba que los mensajes de commit siguen el estándar definido de Conventional Commits (reutilizando el hook) y también verifica que el asunto no excede de 72 caracteres.
 
 Para un check obligatorio en el que un job no llega a ejecutarse (como en el ejemplo del filtro de rutas, donde el cambio no se produce en la ruta y no ejecuta sus jobs), el estado que queda es **pending** para siempre. La PR no acepta el merge porque se queda bloqueada por el estado de un check que nunca se va a ejecutar. Es un problema conocido en devops y tiene soluciones concretas, como aplicar condicionales en el workflow para que quede **skipped** (equivale a **success** para el check) o Dummy Workflows.
 
