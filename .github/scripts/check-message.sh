@@ -17,7 +17,7 @@ fi
 
 # The hook accepts these prefixes unless --strict, which would also apply locally.
 case "${subject,,}" in
-  "amend! "* | "fixup! "* | "squash! "*)
+  "amend! "* | "fixup! "* | "squash! "* | merge*)
     echo "::error::Autosquash or merge message: $label"
     status=1
     ;;
