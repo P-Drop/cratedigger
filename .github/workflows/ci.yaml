@@ -268,5 +268,11 @@ jobs:
               echo "::error::Subject over 72 chars (${#subject}): ${sha:0:7} $subject"
               status=1
             fi
+            case "$subject" in
+              "amend! "*|"fixup! "*|"squash! "*)
+                echo "::error::Autosquash commit left in branch: ${sha:0:7} $subject"
+                status=1
+                ;;
+            esac
           done
           exit "$status"
