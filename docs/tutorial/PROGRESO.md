@@ -4,10 +4,10 @@
 
 ## Estado actual
 
-- **Fase actual:** 2 · CI y flujo de PRs
-- **Estado:** 🟨 En review desde el 2026-10-14 ([PR #2](https://github.com/P-Drop/cratedigger/pull/2)). Reto: [`retos/fase-02-ci.md`](retos/fase-02-ci.md).
-- **Siguiente paso:** 2.ª ronda de review (2026-10-16): sin 🔴. Resuelto el 🟡 de la lista duplicada de hooks. Siguen abiertos dos 🟡: la validación de mensajes deja pasar `fixup!`, `squash!` y los merges y no valida el título de la PR; y Renovate, pendiente de instalar tras el merge. Después, la mini-entrevista.
-- **Última actualización:** 2026-10-16
+- **Fase actual:** 3 · Modelado del catálogo (sin abrir)
+- **Estado:** ⬜ Pendiente de abrir. La Fase 2 está superada con 17/20.
+- **Siguiente paso:** mergear la PR de cierre de la Fase 2 (rama `docs/phase-02-closure`: evidencia de Renovate en el reto, este archivo y el banco de preguntas). Después, cuando digas, abro la Fase 3 con el repaso espaciado (2 preguntas) y el enunciado del reto.
+- **Última actualización:** 2026-10-20
 
 Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · 🔁 rehacer
 
@@ -17,7 +17,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 |---|---|---|---|---|
 | 0 · Setup profesional | ✅ | 19 | 2026-09-27 | — (commits directos en `main`) |
 | 1 · Infra y configuración | ✅ | 17 | 2026-10-07 | [#1](https://github.com/P-Drop/cratedigger/pull/1) |
-| 2 · CI y flujo de PRs | 🟨 | — | — | [#2](https://github.com/P-Drop/cratedigger/pull/2) |
+| 2 · CI y flujo de PRs | ✅ | 17 | 2026-10-20 | [#2](https://github.com/P-Drop/cratedigger/pull/2) |
 | 3 · Modelado del catálogo | ⬜ | — | — | — |
 | 4 · API del catálogo | ⬜ | — | — | — |
 | 5 · Auth, permisos y seguridad | ⬜ | — | — | — |
@@ -43,7 +43,12 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 | Healthchecks de Docker: se ejecutan cada `interval` durante toda la vida del contenedor; lo que se evalúa una sola vez es la condición de `depends_on`. Qué hace y qué no hace `--wait` | F1 · P2, matiz fallado · repaso F2 🟡 (ciclo de vida y `depends_on` ✅; ❌ creía que `start_period` retrasa el primer check; `--wait` sin el código de salida ni «implica `-d`». Repregunta 🟡: cálculo con `start_interval` exacto, pero sin él supuso `interval` en vez del valor por defecto de 5 s, medido: 5,3 s) | 0 |
 | Request id: política de **aceptación** frente a **generación**; correlación ≠ unicidad; `uuid4` es aleatorio (unicidad probabilística); `uuid7` | F1 · P4 🟡 | 0 |
 | Problemas de «¿qué imprime?»: seguir el aliasing hasta el final (si `a is b`, cualquier lectura de `a` ve lo que se hizo por `b`) | F1 · P5 🟡 | 0 |
-| Tests que pasan por el motivo equivocado: comprobar que un test falla cuando debe (quitar la fixture, romper el código); coste de un `except Exception` amplio | F1 · review, 2.ª ronda | 0 |
+| Tests que pasan por el motivo equivocado: comprobar que un test falla cuando debe (quitar la fixture, romper el código); coste de un `except Exception` amplio. Vale también para las puertas del CI: probarlas con entradas límite | F1 · review, 2.ª ronda · F2 · review, 2.ª ronda (la puerta de mensajes aceptaba `fixup!`, `squash!` y merges; lo destapó el tutor, no una prueba propia) | 0 |
+| CI, Continuous Delivery y Continuous Deployment son **prácticas**, no herramientas. Delivery = cada cambio produce un artefacto desplegable (construido una vez, inmutable). Qué le falta al proyecto, en piezas concretas. Qué se pierde con ramas largas: feedback tardío, reviews peores, merges arriesgados | F2 · P1 🟡 | 0 |
+| Tests flaky: que pase alguna vez **no** prueba que el código esté bien; el aislamiento y el orden son la causa más común; cuarentena explícita frente a re-run o reintentos. SQL sin `ORDER BY` no garantiza orden (plan, MVCC), y el bug depende del contrato del selector | F2 · P2 🟡 · repregunta 🟡 (mecanismo equivocado) | 0 |
+| `sys.path`: `PYTHONPATH` va **antes** de la stdlib. Un venv no tiene intérprete propio (enlace al base, `pyvenv.cfg`, `sys.prefix`); solo aísla `site-packages`. **CPython es el intérprete**, no un módulo | F2 · P3 🟡 · repregunta ❌ (CPython como módulo) | 0 |
+| Cachés de CI: clave frente a contenido; una entrada de caché de Actions es inmutable para su clave. Si la herramienta valida lo cacheado (pre-commit indexa por `(repo, ref)`), una clave mala es un problema de rendimiento, no de corrección | F2 · P4 ✅ · repregunta ❌ | 0 |
+| «Pasa en local, falla en el CI»: empezar por reproducir las condiciones del CI y aterrizar las causas en el proyecto (`.env`, suites partidas, timeouts, `TZ`/locale, parche de Python), con comprobaciones concretas | F2 · P5 🟡 · repregunta ✅ | 0 |
 
 ## Ayudas usadas
 
@@ -53,6 +58,7 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 |---|---|---|---|
 | — | 0 | ninguna | No se pidió ninguna pista; todo el código y las decisiones son propias |
 | — | 1 | ninguna | No se pidió ninguna pista. Hubo una aclaración de criterios (alcance del request id en los logs, 2026-10-05), que no cuenta como pista |
+| — | 2 | ninguna | No se pidió ninguna pista. En la 2.ª ronda de review, el tutor señaló que el hook tenía una opción para rechazar `fixup!` y merges («mira su `--help`»): es un hallazgo de review, no una pista |
 
 ## Registro de evaluaciones
 
@@ -100,6 +106,28 @@ Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · �
 - **Mini-entrevista:** P1 🟡 · P2 ✅ · P3 ✅ · P4 🟡 · P5 🟡
 - **Añadido a «Temas a repasar»:** orden de middlewares y efecto en el cliente; ciclo de vida de los healthcheck y `depends_on`; aceptación frente a generación del request id; aliasing en «¿qué imprime?»; tests que pasan por el motivo equivocado.
 - **Pendiente para fases futuras:** el stack de `CLAUDE.md` y el ROADMAP dicen MongoDB 8; revisar cuando se resuelva SERVER-121912.
+
+### Fase 2 · CI y flujo de PRs (2026-10-20)
+
+| Criterio | Nota | Comentario |
+|---|---|---|
+| Funcionalidad | 4/4 | Los 15 criterios verificados de forma independiente: 7 checks requeridos en las reglas efectivas de `main`, ruleset sin `bypass_actors`, solo merge commit con `PR_TITLE` (el merge `79c23ca` quedó convencional y sin ` (#N)`), aprobación de forks y `sha_pinning_required` activos, y Renovate funcionando (issue #5: agrupa uv y gitleaks, retiene `postgres 18` y Python 3.15). Puertas demostradas en las PRs #3 y #4. |
+| Diseño y código | 4/4 | `permissions: {}` con mínimos por job, `persist-credentials: false`, `concurrency` que nunca cancela un push a `main`, gitleaks con checksum, imágenes por digest idénticas en Compose y CI, cobertura combinada con artefactos, ruff desde el lockfile. Tras la review: una sola lista de hooks con `ci.skip`, y un script de mensajes con el título por `env:` (sin inyección) y merges detectados por estructura. La 1.ª entrega duplicaba la lista de hooks y su puerta de mensajes tenía huecos, ambos corregidos. |
+| Tests | 3/4 | Buena verificación de las puertas: test roto, lock desincronizado y cobertura al 50 % (PR #3), mensaje no convencional (PR #4) y título `WIP`. Resta: los huecos de la puerta de mensajes (`fixup!`, `squash!`, merges, título sin validar) los encontró el tutor probando entradas límite, no una prueba propia; y la captura del título en rojo es anterior a que el check fuera obligatorio, así que no demuestra el bloqueo. |
+| Proceso | 4/4 | Commits atómicos y convencionales, ningún asunto de más de 72 caracteres (lección de F0 y F1 resuelta y además impuesta por el CI). PR descrita con su plantilla y follow-ups, README y ADR-0002 al día con trade-offs honestos. Reescritura de historial solo en la rama propia, con copia de seguridad. Nit: un backtick roto en el README en la 1.ª entrega (revisar lo renderizado, tercera fase). |
+| Entrevista | 2/4 | P1 🟡 · P2 🟡 · P3 🟡 · P4 🟡 · P5 🟡. Buen razonamiento de diseño sobre el código propio (P4 y la repregunta de P5), pero con errores conceptuales: «si pasa una vez, el código es correcto», CPython tratado como un módulo, una caché mal indexada vista como problema de corrección, y el orden de `sys.path`. Respuestas largas con relleno y comprobaciones poco concretas. |
+| **Total** | **17/20** | **Sólido** |
+
+- **Fortalezas:**
+  - Diseño del CI a nivel profesional, con una única fuente de verdad en todo: hooks (`ci.skip`), versiones (Renovate con `customManagers`) e imágenes (digest idéntico).
+  - Reacción a la review con causa raíz y documentación de alternativas descartadas: por qué no usar `--strict` ni detectar merges por mensaje, y por qué el título va en un workflow aparte.
+  - Seguridad del CI bien entendida: `pull_request` frente a `pull_request_target`, inyección de scripts con datos de la PR, aprobación de forks, y el reconocimiento de que una PR puede modificar sus propios checks.
+- **A mejorar:**
+  - Probar cada puerta con entradas límite antes de darla por buena: es la misma lección de la F1 («comprobar que un test falla cuando debe»), ahora aplicada al CI.
+  - En la entrevista: definiciones precisas antes que descripciones largas, comprobaciones concretas (comandos, no «observo y verifico») y nada de afirmaciones absolutas sin comprobar.
+- **Mini-entrevista:** P1 🟡 · P2 🟡 · P3 🟡 · P4 🟡 · P5 🟡
+- **Añadido a «Temas a repasar»:** CI/CD/CD como prácticas; tests flaky y orden sin `ORDER BY`; `sys.path`, venv y CPython; cachés de CI (inmutabilidad, corrección frente a rendimiento); «pasa en local, falla en el CI».
+- **Pendiente para fases futuras:** Renovate tiene retenidos Python 3.15 y `postgres 18` en el dashboard, a decidir. Los ADRs se numeran por orden de creación (ROADMAP y `CLAUDE.md` actualizados el 2026-10-20 a petición): el de modelado será el 0003.
 
 <!-- Plantilla: se copia al cerrar cada fase.
 
