@@ -350,7 +350,10 @@ permissions: contents: read
 }
 ```
 
-- [ ] La configuración de actualización de dependencias está en `main` y la herramienta ha abierto, o ha informado de que no necesita abrir, su primera PR.
+- [x] La configuración de actualización de dependencias está en `main` y la herramienta ha abierto, o ha informado de que no necesita abrir, su primera PR.
+
+Issue de Renovate con [Dependency Dashboard](https://github.com/P-Drop/cratedigger/issues/5)
+
 - [x] El badge del README se ve bien **renderizado** en GitHub y enlaza al workflow.
 - [x] `uv run pre-commit run --all-files`, `uv run mypy .` y `uv run pytest` siguen en verde en local.
 
