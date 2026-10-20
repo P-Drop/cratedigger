@@ -193,19 +193,21 @@ El detalle está en `docs/tutorial/ROADMAP.md` y el estado, en `docs/tutorial/PR
 |---|---|
 | 0 | Setup profesional: git, uv, ruff, mypy, pytest, pre-commit y ADR-0001 |
 | 1 | Infra y configuración: Compose (PG + Mongo), settings 12-factor, User personalizado, health y middleware |
-| 2 | CI y flujo de PRs: GitHub Actions y protección de `main` |
-| 3 | Modelado del catálogo: modelos, constraints, admin, seed y ADR-0002 |
+| 2 | CI y flujo de PRs: GitHub Actions, protección de `main` y ADR-0002 |
+| 3 | Modelado del catálogo: modelos, constraints, admin, seed y ADR de modelado |
 | 4 | API del catálogo con DRF: services/selectors, filtros, OpenAPI y Bruno |
-| 5 | Autenticación, permisos y seguridad: JWT, roles, throttling y ADR-0003 |
+| 5 | Autenticación, permisos y seguridad: JWT, roles, throttling y ADR de autenticación |
 | 6 | Samples: M2M auto-referencial y reglas de negocio |
 | 7 | ORM avanzado y rendimiento: N+1, agregaciones y window functions |
 | 8 | PostgreSQL a fondo: full-text, trigramas, CTE recursivo y transacciones |
-| 9 | MongoDB: letras anotadas con puertos y adaptadores, y ADR-0004 |
+| 9 | MongoDB: letras anotadas con puertos y adaptadores, y ADR de letras |
 | 10 | Docker de producción: multi-stage con uv y gunicorn |
 | 11 | *(extra)* Celery + Redis: importación desde MusicBrainz |
 | 12 | *(extra)* Caché con Redis |
-| 13 | *(extra)* Despliegue en la nube y secretos en producción, con ADR-0005 |
+| 13 | *(extra)* Despliegue en la nube y secretos en producción, con ADR de despliegue |
 | 14 | *(extra)* Portafolio final y simulacro de entrevista |
+
+Los ADRs se numeran por orden de creación: 0001 arquitectura y 0002 CI y flujo de PRs. El siguiente (modelado) será el 0003.
 
 ## Archivos del tutorial
 

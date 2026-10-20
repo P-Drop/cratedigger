@@ -45,6 +45,18 @@ Formato de cada entrada:
 - **Repregunta típica:** «¿Cuándo es útil a propósito un valor por defecto mutable?» (Una caché barata, aunque `functools.cache` es más claro.) «¿Y qué pasa con `def f(t=time.time())`?»
 - **Mi respuesta:**
 
+### `python -c "import django"` falla, pero `uv run python -c "import django"` funciona. ¿Por qué? ¿Cómo busca Python un módulo? ¿Qué es un entorno virtual? · `F2` · 🟡
+
+- **Puntos clave:**
+  - `python` es el primer intérprete que encuentra el `PATH`, y su `site-packages` no tiene Django. `uv run` sincroniza `.venv` con el lockfile y ejecuta con su intérprete.
+  - `import` recorre `sys.path` en orden y usa el **primer** módulo que encuentra: directorio del script (o `''` con `-c`) → **`PYTHONPATH`** → stdlib → `site-packages`. Por eso un `PYTHONPATH` o un `json.py` propio en el directorio actual pueden tapar la stdlib.
+  - Un venv **no** tiene intérprete propio: `.venv/bin/python` es un enlace al Python base, y la stdlib también es la del base. Solo aísla `site-packages`.
+  - Mecanismo: al arrancar, Python encuentra `pyvenv.cfg` (`home = …`, `include-system-site-packages = false`), fija `sys.prefix` en el venv (`sys.base_prefix` sigue en el base) y el módulo `site` añade el `site-packages` del venv. Activar solo antepone `.venv/bin` al `PATH`.
+  - **CPython es el intérprete** (la implementación de referencia, en C), no un módulo de la stdlib.
+  - Un `.venv` no es portable: enlace al Python base, shebangs con rutas absolutas en `.venv/bin/` y wheels compilados por plataforma y ABI (`cp313`, `manylinux`). Se comparte `uv.lock` + `.python-version` y el entorno se recrea; en Docker, se construye dentro de la imagen.
+- **Repregunta típica:** «Borras el Python base al que apunta tu `.venv`. ¿Qué le pasa al entorno?» (El enlace queda colgando y el entorno no arranca; se recrea con `uv sync`. uv usa un enlace de versión menor, `cpython-3.13-…`, para que un cambio de parche no lo rompa.)
+- **Mi respuesta:**
+
 ## Django (fundamentos)
 
 
@@ -61,7 +73,15 @@ Formato de cada entrada:
 
 ## ORM y SQL
 
-_Todavía no hay preguntas._
+### Un selector devuelve `User.objects.filter(is_active=True)` y un test comprueba que salen en orden de creación. Pasa casi siempre. ¿Dónde está el bug? · `F2` · 🟡
+
+- **Puntos clave:**
+  - SQL sin `ORDER BY` **no garantiza ningún orden**. PostgreSQL devuelve las filas en el orden que le dé el plan: en una tabla pequeña y recién creada suele coincidir con la inserción, y por eso «pasa casi siempre».
+  - Ese orden cambia por MVCC (un `UPDATE` escribe una versión nueva de la fila en otra posición física), por un plan distinto (índice, escaneo en paralelo) o por `VACUUM`. No por «peticiones que llegan antes»: en el test, los `create()` son secuenciales.
+  - Dónde está el bug depende del **contrato**: si el selector promete un orden, le falta `order_by()`; si no lo promete, el test exige algo que nadie garantiza y debe comparar sin orden.
+  - DRF avisa con `UnorderedObjectListWarning` al paginar un queryset sin orden: una paginación sin orden estable puede repetir u omitir filas entre páginas.
+- **Repregunta típica:** «¿Y `Meta.ordering` en el modelo? ¿Qué coste tiene?» (Orden por defecto en todas las consultas, también donde no hace falta; se puede anular con `order_by()`.)
+- **Mi respuesta:**
 
 ## APIs REST y DRF
 
@@ -69,7 +89,16 @@ _Todavía no hay preguntas._
 
 ## Testing
 
-_Todavía no hay preguntas._
+### ¿Qué es un test flaky? Si un check obligatorio falla una de cada diez veces sin cambios en el código, ¿qué haces? · `F2` · 🟡
+
+- **Puntos clave:**
+  - Flaky: resultados distintos sobre el mismo código. Que pase alguna vez **no** demuestra que el código esté bien: a menudo destapa una carrera, un orden no garantizado o una dependencia del reloj.
+  - Causas típicas: orden de ejecución y estado compartido (la más común), tiempo (relojes, zonas horarias, `sleep`), concurrencia, orden no garantizado (`ORDER BY`, sets), aleatoriedad y dependencias externas o servicios que aún no están listos.
+  - En CrateDigger: el rollback por test de pytest-django **no cubre MongoDB**.
+  - Qué hacer con el check: no normalizar el re-run (si el rojo deja de significar algo, el equipo ignora la puerta), **cuarentena explícita** con issue, responsable y plazo, y nada de reintentos automáticos que tapen la carrera.
+  - Diagnóstico: historial de runs (qué test y con qué frecuencia), ejecución en bucle, orden aleatorio, test aislado frente a dentro de la suite. Arreglo: aislamiento, orden explícito, esperas por condición en vez de por tiempo.
+- **Repregunta típica:** «¿Por qué un check obligatorio flaky es peor que no tener ese check?»
+- **Mi respuesta:**
 
 ## Seguridad y autenticación
 
@@ -158,6 +187,41 @@ _Todavía no hay preguntas._
   - Los healthchecks siguen ejecutándose cada `interval`; Compose marca el contenedor como `unhealthy` pero no actúa sobre los dependientes. `--wait` solo bloquea el comando hasta que todo esté `healthy`.
   - La app debe tolerar la caída posterior de la BD: timeouts, reintentos y un readiness propio.
 - **Repregunta típica:** «Cambias `POSTGRES_PASSWORD`, haces `down` y `up`, y la app no autentica. ¿Por qué?»
+- **Mi respuesta:**
+
+### Continuous Integration, Continuous Delivery y Continuous Deployment: ¿en qué se diferencian? ¿Dónde está tu proyecto y qué le falta? · `F2` · 🟡
+
+- **Puntos clave:**
+  - Son **prácticas**, no herramientas: tener GitHub Actions no es hacer CI.
+  - **CI:** integrar cambios pequeños en la rama principal con frecuencia, con build y tests automáticos en cada cambio, para que la rama esté siempre en verde.
+  - **Continuous Delivery:** cada cambio que pasa el pipeline produce un **artefacto desplegable** (construido una vez, versionado, inmutable y promovido entre entornos). El despliegue está automatizado, pero el paso a producción lo aprueba una persona.
+  - **Continuous Deployment:** sin aprobación; todo lo que pasa llega a producción. Exige confianza en los tests, smoke tests, monitorización y rollback automático.
+  - CrateDigger tiene CI. Para Delivery le falta una imagen versionada por merge publicada en un registry, un despliegue automatizado con las migraciones como paso y un entorno donde probar. Para Deployment, el disparo automático al mergear, el smoke test y el rollback.
+- **Repregunta típica:** «Tus PRs duran una semana y traen 30 commits. ¿Eso es CI?» (No en sentido estricto: feedback tardío, reviews peores y merges más arriesgados. Es razonable con un solo desarrollador, porque no hay nadie de quien divergir y cada push sigue pasando por el pipeline.)
+- **Mi respuesta:**
+
+### Tu caché de pre-commit usa como clave `.python-version` y `.pre-commit-config.yaml`, no `uv.lock`. ¿Por qué? · `F2` · 🟡
+
+- **Puntos clave:**
+  - Los archivos son la **clave**; lo cacheado es `~/.cache/pre-commit`: los repos de los hooks remotos y los entornos que pre-commit construye para ellos.
+  - ruff y mypy son hooks locales (`language: system`) que corren desde `.venv`, cuya caché es la de setup-uv con clave `uv.lock`. Meter `uv.lock` invalidaría la caché de pre-commit sin motivo.
+  - `.python-version` entra porque los entornos de los hooks Python se crean con el intérprete de pre-commit: si cambia la versión menor, quedan enlazados a un intérprete que no existe.
+  - Una clave **demasiado amplia** no rompe la corrección: pre-commit indexa su almacén por `(repo, ref)` y, si el `rev` cambia, clona la versión nueva. Pero una entrada de caché de Actions es **inmutable** para su clave: con *hit* exacto no se vuelve a guardar, y cada run reinstala lo nuevo. Es un problema de **rendimiento**.
+  - Principio: si la herramienta valida lo que encuentra en la caché, una clave mal elegida solo cuesta tiempo. Las cachés que pueden romper la corrección son las que se consumen sin validar.
+- **Repregunta típica:** «¿Qué hace `restore-keys` y cuándo lo usarías?»
+- **Mi respuesta:**
+
+### Un test pasa en tu máquina y falla en el CI. Cinco causas probables y cómo comprobarías cada una · `F2` · 🟡
+
+- **Puntos clave:**
+  - Método: **reproducir las condiciones del CI** en lugar de adivinar: un clon limpio, `uv sync --locked`, sin `.env`, las mismas variables, `TZ=UTC` y el comando exacto del job.
+  - Configuración: `.env` local frente a variables del CI (en esta fase, mypy fallaba en el CI porque el plugin de django-stubs importa `settings.py` y `EnvSettings()` exigía variables que solo estaban en el `.env`).
+  - Aislamiento: el CI parte la suite (`-m "not integration"` / `-m integration`), así que cambian el conjunto y el orden de los tests.
+  - Tiempo: timeouts de conexión justos en un runner compartido y con servicios recién arrancados.
+  - Entorno: zona horaria (UTC frente a `Europe/Madrid`), locale, mayúsculas en el sistema de archivos, parche de Python.
+  - Código que solo existe en local: sin commitear o ignorado (`git status --ignored`).
+  - Descartar lo que tu CI ya impide (lockfile con `UV_LOCKED`, imágenes fijadas por digest) también es parte de la respuesta.
+- **Repregunta típica:** «¿Cómo depurarías un fallo que solo ocurre en el runner?» (Paso de diagnóstico con `python -VV`, `date`, `locale` y `env` sin secretos; logs de depuración del runner; sesión interactiva.)
 - **Mi respuesta:**
 
 ## Git
