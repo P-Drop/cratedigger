@@ -6,8 +6,8 @@
 
 - **Fase actual:** 2 · CI y flujo de PRs
 - **Estado:** 🟨 En review desde el 2026-10-14 ([PR #2](https://github.com/P-Drop/cratedigger/pull/2)). Reto: [`retos/fase-02-ci.md`](retos/fase-02-ci.md).
-- **Siguiente paso:** corregir los hallazgos de la primera ronda de review (sin 🔴; 3 🟡). Después, mergear, instalar Renovate y cerrar su criterio de aceptación; luego, la mini-entrevista.
-- **Última actualización:** 2026-10-14
+- **Siguiente paso:** 2.ª ronda de review (2026-10-16): sin 🔴. Resuelto el 🟡 de la lista duplicada de hooks. Siguen abiertos dos 🟡: la validación de mensajes deja pasar `fixup!`, `squash!` y los merges y no valida el título de la PR; y Renovate, pendiente de instalar tras el merge. Después, la mini-entrevista.
+- **Última actualización:** 2026-10-16
 
 Leyenda: ⬜ pendiente · 🟦 en curso · 🟨 en review · ✅ superada · 🔁 rehacer
 
