@@ -74,7 +74,6 @@ Que nada entre en `main` sin pasar por una PR con el CI en verde, y que eso lo g
 
 - [x] El workflow se ejecuta en la PR de esta fase y termina en verde. Enlaza el run en la PR.
 
-
 - [x] Una **PR de prueba** con un test roto a propósito queda con el check en rojo y el botón de merge bloqueado. Tras arreglarlo, pasa. Enlaza la PR y pega una captura o la salida de `gh pr checks` de ambos estados. La PR de prueba se cierra sin mergear.
 
 PR de prueba #3 (test: verify CI gates (do not merge)), cerrada al final sin mergear.
@@ -140,6 +139,8 @@ To github.com:P-Drop/cratedigger.git
  ! [remote rejected] main -> main (push declined due to repository rule violations)
 error: falló el empuje de algunas referencias a 'github.com:P-Drop/cratedigger.git'
 ```
+
+> Salida capturada cuando el ruleset tenía cinco checks obligatorios. Hoy son siete.
 
 - [x] Un job que modifica `pyproject.toml` sin regenerar `uv.lock` falla. Demuéstralo en la PR de prueba o en un run enlazado.
 
@@ -312,6 +313,10 @@ permissions: contents: read
           {
             "context": "Check commit messages",
             "integration_id": 15368
+          },
+          {
+            "context": "Check PR title",
+            "integration_id": 15368
           }
         ]
       }
@@ -350,6 +355,29 @@ permissions: contents: read
 - [x] `uv run pre-commit run --all-files`, `uv run mypy .` y `uv run pytest` siguen en verde en local.
 
 - [x] Commits atómicos y convencionales, con asuntos de **72 caracteres como máximo**. La PR está descrita con tu plantilla.
+
+Las reglas de los mensajes que llegan a `main` están en `.github/scripts/check-message.sh`, el script que usan los checks `Check commit messages` y `Check PR title`. Prueba local con los mensajes límite que propuso el tutor en la review:
+
+```bash
+> for msg in "fixup! ci: validate commit messages" "squash! docs: x" \
+             "Merge branch 'main' into feat/phase-02-ci" "WIP" "ci: valid subject"; do
+    printf '%s\n' "$msg" > /tmp/msg
+    bash .github/scripts/check-message.sh /tmp/msg "$msg" >/dev/null 2>&1 \
+      && echo "PASA  $msg" || echo "FALLA $msg"
+  done
+
+FALLA fixup! ci: validate commit messages
+FALLA squash! docs: x
+FALLA Merge branch 'main' into feat/phase-02-ci
+FALLA WIP
+PASA  ci: valid subject
+```
+
+Validación del título de la PR: cambio el título de la PR #2 a `WIP` sin hacer push. El workflow `pr-title` se dispara con el evento `edited` y el check queda en rojo. Al restaurar el título, vuelve a verde.
+
+![Título WIP: el check Check PR title falla](image_02.png)
+
+![Título restaurado: los siete checks en verde](image_03.png)
 
 ## Restricciones
 
@@ -391,7 +419,7 @@ De estos, todos utilizan un repositorio remoto excepto Ruff y Mypy que utilizan 
 
 - Gitleaks se ejecuta en CI como medida de detección de la filtración. No es preventivo, porque cuando se ejecuta el workflow, el código (y los secretos filtrados) ya está en la rama remota del repositorio. La ejecución es diferente: en pre-commit, gitleaks utiliza el repositorio en el hook, mientras que en CI realiza una instalación de la herramienta con comprobación del checksum y escanea todo el historial del repositorio. Ambas versiones también se deben mantener sincronizadas, he configurado Renovate para ello.
 
-- La comprobación de Conventional Commits se realiza también en CI en su propio job (requiere `fetch-depth: 0`). Además, se comprueba la longitud máxima de 72 caracteres en el asunto del commit.
+- Conventional Commits se valida también en el CI: los commits de la PR en el job `Check commit messages` (requiere `fetch-depth: 0`) y el título de la PR en el workflow `pr-title`. Ambos usan el script `.github/scripts/check-message.sh`, que invoca el hook y añade las reglas de la rama: asunto de 72 caracteres como máximo y ningún mensaje *autosquash* ni que empiece por `Merge`.
 
 
 Por tanto los hooks que no se reutilizan en CI, o que se utilizan de otra manera son:
@@ -402,15 +430,17 @@ Por tanto los hooks que no se reutilizan en CI, o que se utilizan de otra manera
 
 - El hook de gitleaks comprueba el *staging*, por lo que escanearía **cero commits**. Lo sustituye el job que escanea el historial completo.
 
-- `conventional-pre-commit` es del stage `commit-msg`, así que `pre-commit run --all-files` no lo ejecuta. El job `Check commit messages` lo invoca para cada commit de la PR con `--hook-stage commit-msg --commit-msg-filename`.
+- `conventional-pre-commit` es del stage `commit-msg`, así que `pre-commit run --all-files` no lo ejecuta. El script `check-message.sh` lo invoca con `--hook-stage commit-msg --commit-msg-filename`, para cada commit de la PR y para su título.
 
 - Todos los hooks u opciones de hooks que modifican archivos, en CI funcionan estrictamente como comprobaciones (`--show-diff-on-failure`). Si tuvieran que cambiar algo, fallan y muestran el error.
+
+**Por qué no uso `--strict` en `conventional-pre-commit`.** Sin esa opción, el hook acepta los mensajes *autosquash* (`amend!`, `fixup!`, `squash!`) y los que empiezan por `Merge`; es lo único que cambia `--strict`. En local no lo quiero: `git commit --fixup` pasa por el hook `commit-msg`, y con `--strict` tendría que usar `--no-verify`, que se salta todos los hooks. Para activarlo solo en el CI necesitaría un segundo hook con la lista de tipos duplicada, porque `pre-commit run` no admite argumentos extra. Por eso el hook valida el formato y los tipos desde una única configuración, y el script del CI añade las reglas de la rama. Los *merge commits* se rechazan por estructura (`git rev-list --merges`, commits con dos padres) y no por mensaje, porque `is_merge()` del hook solo mira si el texto empieza por `Merge`.
 
 Para evitar una lista duplicada de herramientas de validación en `pre-commit` y CI, se utiliza un step en el run que ejecuta todos los hooks, definiendo las excepciones en el archivo `.pre-commit-config.yaml` con la opción `ci: skip: [uv-lock, gitleaks]` (no es necesario excluir `uv-sync` porque es un hook de `post-checkout`, y `conventional-pre-commit` de `commit-msg`). Aunque se ejecuten en un único step, cada comprobación en CI se seguirá mostrando como `Passed` / `Failed`, para descubrir los fallos directamente.
 
 Las comprobaciones de pre-commit se pueden saltar, con la opción `--no-verify` en el commit. Las comprobaciones de CI son la validación real para la rama principal del código del repositorio.
 
-Además, la configuración de `.pre-commit-config.yaml` se ejecuta en un entorno local, que puede tener dependencias que solo son visibles en el entorno simulado de CI (en concreto, esta fase reveló una dependencia de mi configuración de `mypy` con `.env`local, invisible hasta CI). En CI se prueba la instalación desde cero y se valida con independencia del entorno local, por lo que su repetición está justificada.
+Además, la configuración de `.pre-commit-config.yaml` se ejecuta en un entorno local, que puede tener dependencias que solo son visibles en el entorno simulado de CI (en concreto, esta fase reveló una dependencia de mi configuración de `mypy` con `.env` local, invisible hasta CI). En CI se prueba la instalación desde cero y se valida con independencia del entorno local, por lo que su repetición está justificada.
 
 ---
 
@@ -425,11 +455,13 @@ He configurado varios jobs, agrupando los steps por su propósito concreto:
 - `Check coverage threshold`
 - `Check commit messages`
 
-De esta forma, la configuración de cada job se puede adaptar a sus necesidades concretas (p.ej. los servicios de postgres y mongo solo se instalan el job de tests de integración, que es el único que lo necesita). Aunque la configuración es más compleja, queda más legible con steps agrupados que con una lista enorme de steps para un solo job. Además los fallos quedan más localizados, y aseguran que se producen en las condiciones que prueba el job. Hay configuraciones globales, como las variables de entorno que se repiten en varios jobs o los permisos por defecto. El inconveniente de definir las variables de entorno globales, es que también se encuentran accesibles para los jobs que no los requieren, como el la detección de filtración de secretos. Se acepta este trade-off a cambio de simplificar y no repetir código, siendo los valores de las variables falsos y desechables.
+Además, el título de la PR se valida en un workflow aparte, `pr-title` (pregunta 5).
+
+De esta forma, la configuración de cada job se puede adaptar a sus necesidades concretas (p.ej. los servicios de postgres y mongo solo se instalan en el job de tests de integración, que es el único que lo necesita). Aunque la configuración es más compleja, queda más legible con steps agrupados que con una lista enorme de steps para un solo job. Además los fallos quedan más localizados, y aseguran que se producen en las condiciones que prueba el job. Hay configuraciones globales, como las variables de entorno que se repiten en varios jobs o los permisos por defecto. El inconveniente de definir las variables de entorno globales, es que también se encuentran accesibles para los jobs que no los requieren, como la detección de filtración de secretos. Se acepta este trade-off a cambio de simplificar y no repetir código, siendo los valores de las variables falsos y desechables.
 
 Los jobs de test unitarios e integración se encuentran separados. Cada uno ejecuta la suite definida por sus módulos: los unitarios prueban lógica de negocio y funcionalidades concretas, con conexiones externas y datos mockeados, mientras que los de integración prueban el flujo con la conexión real (solo en integración se requieren servicios de bases de datos). Gracias al plugin de `pytest-cov` (usa `coverage.py`) es posible que cada job mida su propia cobertura, que pueden ser combinadas después para medir la cobertura total y compararla con el 85% total (definido en `pyproject.toml` como `[tool.coverage.report] -> fail_under`). Cada job genera un archivo de datos (definido en `COVERAGE_FILE` como `.coverage.unit` o `.coverage.integration`) al ejecutar la suite con `pytest` y la opción `--cov-fail-under=0`, para que no aplique la cobertura total sobre sus datos parciales. En cada job, este archivo se sube como artefacto de la run, después un job `Check coverage threshold`, que se ejecuta cuando los dos jobs de tests terminan con éxito, descarga los artefactos, combina los archivos y genera el reporte completo, que compara el resultado con el threshold definido. Para compartir los artefactos entre jobs, utilizo herramientas de Github Actions (`upload-artifact` y `download-artifact`).
 
-Una ventaja de separar los jobs, es que se ejecutan en paralelo: el tiempo total no es la suma de los jobs, sino el camino más largo. Además, el job de test unitarios puede revelar si un test definido en el modulo requiere el uso de base de datos, porque el job no tiene estos servicios y fallaría.
+Una ventaja de separar los jobs, es que se ejecutan en paralelo: el tiempo total no es la suma de los jobs, sino el camino más largo. Además, el job de test unitarios puede revelar si un test definido en el módulo requiere el uso de base de datos, porque el job no tiene estos servicios y fallaría.
 
 Por contra, hay steps que se repiten en los jobs, como `checkout`, setup de `uv`, `uv sync`. También la configuración del job de cobertura, que necesita toda la infraestructura de `artifacts` para combinar los archivos de otros jobs.
 
@@ -449,7 +481,7 @@ Los riesgos que acepto con la opción de fijar la action con SHA:
 
 - Estoy fijando el SHA de la action, pero no puedo fijar lo que esta action descargue.
 
-- A la hora de obtener el SHA, hay que asegurarse que corresponde al tag del repositorio original y no proviene de un fork externo. He utilizado `git ls-remote` para obtener los SHA de la versión oficial.
+- A la hora de obtener el SHA, hay que asegurarse de que corresponde al tag del repositorio original y no proviene de un fork externo. He utilizado `git ls-remote` para obtener los SHA de la versión oficial.
 
 - La opción fijar SHA y Renovate implica quedarme con versiones antiguas hasta que mergee el PR de Renovate.
 
@@ -469,7 +501,7 @@ De esta manera, puedo confiar en que el código de un fork se evalúa en el work
 
 5. ¿Qué checks marcaste como obligatorios en el ruleset y por qué esos? ¿Qué pasa con un check obligatorio si su job no llega a ejecutarse (por un filtro de rutas, por ejemplo)? ¿Exiges que la rama esté al día con `main` antes de mergear? ¿Qué coste tiene?
 
-De los seis jobs que he definido en el workflow, he marcado todos como checks obligatorios en el ruleset. Los motivos son los siguientes:
+De los siete jobs que he definido (seis en el workflow `ci` y uno en `pr-title`), he marcado todos como checks obligatorios en el ruleset. Los motivos son los siguientes:
 
 - `Check code quality`: Comprueba el estilo, el formato, el tipado, las reglas de ruff, pre-commit... Si no es obligatorio, un PR con código que no respete mis reglas de calidad puede llegar a main.
 
@@ -477,17 +509,19 @@ De los seis jobs que he definido en el workflow, he marcado todos como checks ob
 
 - `Unit tests` e `Integration tests`: Suites de test que comprueban las funcionalidades de la aplicación. Es obligatorio que el código que llegue a main no rompa los tests.
 
-- `Check coverage threshold`: Mide el porcentaje de la base de código cubierta por los módulos de test. El umbral permite flexibilidad, se puede implementar código nuevo sin pruebas, pero al menos un 85% de la base de código debe estar cubierta en main. Hacerlo obligatorio ha requerido reflexión, porque el job depende de los jobs de tests, entonces podría omitir la obligatoriedad de esos jobs. Pero el punto está en queda como **skipped** si falla un job de test, que para los checks cuenta como **success**. Por eso este y los dos jobs de tests deben ser obligatorios.
+- `Check coverage threshold`: Mide el porcentaje de la base de código cubierta por los módulos de test. El umbral permite flexibilidad, se puede implementar código nuevo sin pruebas, pero al menos un 85% de la base de código debe estar cubierta en main. Hacerlo obligatorio ha requerido reflexión, porque el job depende de los jobs de tests, entonces podría omitir la obligatoriedad de esos jobs. Pero la clave está en que queda como **skipped** si falla un job de test, que para los checks cuenta como **success**. Por eso este y los dos jobs de tests deben ser obligatorios.
 
-- `Check commit messages`: Comprueba que los mensajes de commit siguen el estándar definido de Conventional Commits (reutilizando el hook) y también verifica que el asunto no excede de 72 caracteres.
+- `Check commit messages`: Valida cada commit de la PR con `check-message.sh`: formato de Conventional Commits con el hook, asunto de 72 caracteres como máximo y ningún mensaje *autosquash* ni que empiece por `Merge`. Además, rechaza los *merge commits* de la rama, detectados por estructura, y así hace cumplir la regla de actualizar la rama con *rebase*. Con *merge commit*, todos estos commits llegan a `main`.
+
+- `Check PR title`: El título de la PR es el asunto del *merge commit* en `main`, así que se valida con el mismo script. Por defecto, `pull_request` solo se dispara con `opened`, `synchronize` y `reopened`: cambiar el título genera `edited` y, sin añadirlo, el check conservaría el resultado anterior. Va en un workflow aparte (`pr-title`) porque `edited` también se dispara al editar la descripción, y en `ci` cada edición relanzaría los seis jobs. Mantiene `synchronize` porque los checks obligatorios se asocian al SHA de cabeza, y cada push necesita su propio resultado. No filtro las ediciones de la descripción: un job *skipped* crea un resultado que cuenta como éxito y taparía un título en rojo.
 
 Para un check obligatorio en el que un job no llega a ejecutarse (como en el ejemplo del filtro de rutas, donde el cambio no se produce en la ruta y no ejecuta sus jobs), el estado que queda es **pending** para siempre. La PR no acepta el merge porque se queda bloqueada por el estado de un check que nunca se va a ejecutar. Es un problema conocido en devops y tiene soluciones concretas, como aplicar condicionales en el workflow para que quede **skipped** (equivale a **success** para el check) o Dummy Workflows.
 
 He decidido exigir que la rama esté actualizada con `main` como requisito para el merge. El coste para este proyecto es mínimo en este punto: un solo desarrollador, con PR amplias por fase de desarrollo propuesta por el tutor y push directos a main bloqueados en la configuración del repositorio. La rama main se queda desactualizada cuando existen varias ramas de desarrollo, y un desarrollador mergea una PR mientras se realizan las comprobaciones de una segunda rama, de forma que aunque el run de la segunda rama quede en verde, el merge está bloqueado porque main ya no está al día. Este es el trade-off, que acepto porque no influye en el flujo de desarrollo actual.
 
-A cambio, obtengo un main estable y una rama de desarrollo siempre actualizada con la fuente de verdad que representa la rama base. Como `pull_request` prueba el *merge commit* en el momento del run. Dos PRs que se encuentren simultáneamente en verde, podrían provocar un conflicto semántico juntas y romper `main` con el merge. Al exigir la actualización con `main`, el primer merge funciona, pero la segunda rama se encontraría desactualizada y bloquearía el merge de la PR, que debe volver a ejecutar el CI y en este caso se rompería y quedaría la PR en rojo. Para resolver la desactualización, se debe actualizar la rama con un *rebase* desde `main` (*rebase* para evitar meter *merge commits* de la rama base en la rama de desarrollo). Después, volver a ejecutar el run de CI y mergear cuando este verde.
+A cambio, obtengo un main estable y una rama de desarrollo siempre actualizada con la fuente de verdad que representa la rama base. Como `pull_request` prueba el *merge commit* en el momento del run, dos PRs que estén en verde a la vez podrían provocar juntas un conflicto semántico y romper `main` al mergearlas. Al exigir la actualización con `main`, el primer merge funciona, pero la segunda rama se encontraría desactualizada y bloquearía el merge de la PR, que debe volver a ejecutar el CI y en este caso se rompería y quedaría la PR en rojo. Para resolver la desactualización, se debe actualizar la rama con un *rebase* desde `main` (*rebase* para evitar meter *merge commits* de la rama base en la rama de desarrollo). El job `Check commit messages` hace cumplir esta regla: rechaza cualquier *merge commit* de la rama, como el que crea por defecto el botón «Update branch». Después, se vuelve a ejecutar el CI y se mergea cuando esté en verde.
 
-Existe una alternativa profesional para el escenario que he descrito. La estrategia *merge queue* permite crear ramas temporales con un prefijo especial para automatizar la combinación de solicitudes de PR y asegurarse de que no se producen interrupciones en la rama por cambios incompatibles. Esta estrategia es útil cuando existe un gran número de solicitudes de PR simultáneas por rama, aunque la mencione queda descartada para mi proyecto.
+Existe una alternativa profesional para el escenario que he descrito. La estrategia *merge queue* permite crear ramas temporales con un prefijo especial para automatizar la combinación de solicitudes de PR y asegurarse de que no se producen interrupciones en la rama por cambios incompatibles. Es útil cuando hay muchas PRs simultáneas contra la misma rama; la menciono, pero queda descartada para mi proyecto.
 
 ---
 
@@ -501,7 +535,7 @@ Existe una alternativa profesional para el escenario que he descrito. La estrate
 
 Decido utilizar **merge commit** porque, para este proyecto, las PRs son por fase y con varios temas. Prefiero conservar la granularidad para `bisect` y `blame` sin perder la vista por fases (`--first-parent`). Por contra, acepto un historial no lineal y la obligación de mantener commits limpios.
 
-En la configuración del repositorio, activo solo *merge commit* y configuro el mensaje por defecto como el título de la PR, que utiliza Conventional Commits. Entonces, el título de la PR actúa como el asunto del commit que hace el merge a main.
+En la configuración del repositorio, activo solo *merge commit* y configuro el mensaje por defecto como el título de la PR. Así, el título de la PR es el asunto del *merge commit* en `main`. Pero eso solo dice de dónde sale el asunto; por sí mismo no evita nada. Lo que impide que se repita un asunto como el de `aa61ff7` es el check `Check PR title`, que valida el título con las mismas reglas que los commits y se vuelve a ejecutar cada vez que se edita.
 
 ```bash
 > gh api repos/P-Drop/cratedigger --jq '{merge_commit_title, merge_commit_message}'
@@ -512,6 +546,9 @@ En la configuración del repositorio, activo solo *merge commit* y configuro el 
 }
 ```
 
+Pendiente de verificar en el merge de esta PR: si GitHub añade ` (#N)` al asunto, el límite de 72 caracteres tiene que contar ese sufijo.
+
+---
 
 7. Dependabot o Renovate: ¿por qué uno y no otro? ¿Mergearías sus PRs de forma automática? ¿Con qué condiciones?
 
@@ -527,7 +564,7 @@ Por otro lado, se bloquea el salto *major* de la imagen de mongo 7, debido al is
 
 He investigado sobre algunos posibles usos malintencionados de un atacante sobre una PR en un repositorio público:
 
-- Acceso a los secretos de Github del repositorio. Como una PR desde un fork puede modificar y ejecutar `.github/workflows/ci.yaml`, todas las medidas de protección que incluya en este archivo (`timeout-minutes`, `permissions`, `persist-credentials: false`) no son barreras reales contra el atacante. Github impone medidas de seguridad que limitan el impacto del ataque:
+- Acceso a los secretos de Github del repositorio. Como una PR desde un fork puede modificar y ejecutar `.github/workflows/ci.yaml`, todas las medidas de protección que incluya en este archivo (`timeout-minutes`, `permissions`, `persist-credentials: false`) no son barreras reales contra el atacante. Lo mismo vale para `pr-title.yaml` y `.github/scripts/check-message.sh`: una PR puede modificarlos para que sus propios checks pasen, así que los cambios en `.github/` se revisan con especial cuidado. GitHub impone medidas de seguridad que limitan el impacto del ataque:
 
   - El token para PR de forks es de solo lectura y sin acceso a secretos, independientemente de los permisos que conceda el workflow.
 
@@ -547,9 +584,9 @@ He investigado sobre algunos posibles usos malintencionados de un atacante sobre
 
 - Envenenamiento del supply chain con dependencias maliciosas. El atacante puede proponer un cambio en `pyproject.toml` o en el lockfile (debe estar en ambos sitios para que el CI no falle) y al ejecutar `uv sync` en el job se instala la dependencia. Barreras: como en el caso anterior, la aprobación manual de PRs de forks externas y la revisión del diff. Esto exige que las revisiones de PRs externas se realicen con el máximo cuidado y solo se acepten los cambios conocidos y controlados.
 
-- Exfiltración del contexto del runner, donde el atacante inyecta código malicioso en archivos de código o test, que ejecutan herramientas como `os.environ` para acceder a secretos, o contenido de directorios y los envían a servidores externos con `request` o `urllib`. Barreras: igual que en los casos anteriores, revisar con precaución todas las ejecuciones de PRs de origen desconocido y solo permitir después de analizar y comprender la implementación que proponen.
+- Exfiltración del contexto del runner, donde el atacante inyecta código malicioso en archivos de código o test, que ejecutan herramientas como `os.environ` para acceder a secretos, o contenido de directorios y los envían a servidores externos con `requests` o `urllib`. Barreras: igual que en los casos anteriores, revisar con precaución todas las ejecuciones de PRs de origen desconocido y solo permitir después de analizar y comprender la implementación que proponen.
 
-- Abuso de los servicios de Docker, donde el atacante utiliza la red de docker de los servicios levantados en CI para dirigir ataques DDos hacia el exterior. Barrera: aprobación explícita requerida antes de la ejecución de PRs de forks externos; límite de Github de 6h por job.
+- Abuso de los servicios de Docker, donde el atacante utiliza la red de docker de los servicios levantados en CI para dirigir ataques DDoS hacia el exterior. Barrera: aprobación explícita requerida antes de la ejecución de PRs de forks externos; límite de Github de 6h por job.
 
 ![Configuración: Require approval for all external contributors](image_01.png)
 
