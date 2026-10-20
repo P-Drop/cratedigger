@@ -30,7 +30,8 @@
           { "context": "Unit tests", "integration_id": 15368 },
           { "context": "Integration tests", "integration_id": 15368 },
           { "context": "Check coverage threshold", "integration_id": 15368 },
-          { "context": "Check commit messages", "integration_id": 15368 }
+          { "context": "Check commit messages", "integration_id": 15368 },
+          { "context": "Check PR title", "integration_id": 15368 }
         ]
       }
     }
