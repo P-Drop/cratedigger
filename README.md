@@ -46,7 +46,7 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
 | Extras | **Redis**, **Celery**, deploy | ⌛️ |
 | Quality | **uv**, **ruff** (linter and formatter), **mypy** strict with **django-stubs**, **pytest** with **pytest-django**, **pytest-cov** and **factory_boy**, **pre-commit** | ✅ |
 | Infra | **Docker** + **Compose** | ✅ |
-| CI | **GitHub Actions**: quality, secret scan, unit and integration tests, combined coverage >= 85% | ✅ |
+| CI | **GitHub Actions**: quality, secret scan, unit and integration tests, combined coverage >= 85%, commit message and PR title checks | ✅ |
 | Dependencies | **Renovate** | ✅ |
 | API Client | **Bruno** | ⌛️ |
 
@@ -182,7 +182,7 @@ git switch -c feat/<brief-branch-name>
 git switch -c fix/<brief-branch-name>
 ```
 
-2. Use atomic commits with Conventional Commits, also in the PR title. Fill in the body following the template. Make sure you have completed all checks.
+2. Use atomic commits with Conventional Commits and subjects up to 72 characters. The same rules apply to the PR title. Fill in the PR body following the template and make sure you have completed all checks.
 
 3. Verify your CI run passes all checks.
 
@@ -190,17 +190,19 @@ git switch -c fix/<brief-branch-name>
 
 ### Why merge commits?
 
-This project uses *merge-commit* strategy to merge PRs with base branch. This means that progress is tracked by repository history, because all atomic commits created at any develop branch will appear in main. This method allows to group commits into PRs by phase, which could have a wider scope for many topics.
+This project merges PRs with *merge commits*. All atomic commits from a development branch reach `main`, so the history tracks progress commit by commit, while each merge commit groups a whole PR. Here, a PR usually covers a full phase, with several topics.
 
-Use `git log --first-parent` to see repository history by phase, or use `bisect` / `blame` for granularity and commit details.
+Use `git log --first-parent` to read the history by phase, and `bisect` / `blame` for commit-level detail.
 
-As all develop commits are kept in base branch, you should be sure your commits are clean and follow Conventional Commits standard.
+Since every branch commit lands in `main`, make sure your commits are clean and follow Conventional Commits before asking for review.
 
 ### Protected base branch
 
-`main` branch is protected by:
+`main` is protected by a ruleset that applies to all users, admin included:
 
-- Required PR. It has to be updated with `main` before merge. Use rebase to update your branch:
+- Changes only through a PR. Direct pushes, *force push* and branch deletion are forbidden.
+
+- The branch must be up to date with `main` before merging. Update it with rebase, never with a merge:
 
 ```bash
 git fetch origin
@@ -210,26 +212,25 @@ git rebase origin/main
 git push --force-with-lease
 ```
 
-PRs coming from forks require extra approval by admin to run CI.
-
-- CI workflow checks:
+- Required checks:
     - Check code quality.
     - Detect leaked secrets.
     - Unit tests.
     - Integration tests.
     - Check coverage threshold.
     - Check commit messages.
+    - Check PR title.
 
-- Ruleset for all users, admin included.
+- Commit messages and the PR title (the merge commit subject) follow the same rules, enforced in CI by `.github/scripts/check-message.sh`: Conventional Commits, subjects up to 72 characters, no autosquash commits (`fixup!`, `squash!`, `amend!`) and no messages starting with `Merge`. Merge commits inside the branch are rejected too.
 
-- Direct *force push* forbidden.
+    > The local hook still accepts `fixup!` commits, so you can use `git commit --fixup` while you work. Squash them with `git rebase -i --autosquash origin/main` before pushing.
 
-- Branch deletion forbidden.
+- PRs from forks require admin approval before CI runs.
 
 ### Secret protection
 
 1. Local gitleaks pre-commit.
-2. Github *push protection*.
+2. GitHub *push protection*.
 3. Gitleaks job over full history, which blocks merging.
 4. *Secret scanning* monitoring repository.
 
@@ -241,12 +242,12 @@ The CI uses no secrets.
 
 - **Dashboard approval required** for *majors* and Python version changes.
 
-- **Mongo** image keeps under 8 major version.
+- **Mongo** image stays below major version 8.
 
-- **gitleaks hash**: Manually update `GITLEAKS_SHA256` with release `checksums.txt` for each update. Renovate automatically update `GITLEAKS_VERSION` and hook `rev`, but this PR will fail intentionally until `GITLEAKS_SHA256` is updated.
+- **gitleaks hash**: Manually update `GITLEAKS_SHA256` with release `checksums.txt` for each update. Renovate automatically updates `GITLEAKS_VERSION` and hook `rev`, but this PR will fail intentionally until `GITLEAKS_SHA256` is updated.
 
 - **Local uv**: Renovate automatically syncs `required-version` and hook `rev`, but this exact version must be available in local environment.
 
 ## License
 
-Distributed under the MIT license. See [LICENSE](LICENSE)
+Distributed under the MIT license. See [LICENSE](LICENSE).
