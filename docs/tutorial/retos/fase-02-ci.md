@@ -356,6 +356,8 @@ permissions: contents: read
 
 - [x] Commits atómicos y convencionales, con asuntos de **72 caracteres como máximo**. La PR está descrita con tu plantilla.
 
+Verificación con fallos esperados en la [PR #4](https://github.com/P-Drop/cratedigger/pull/4) test: ci gates bad commits (cerrado sin mergear).
+
 Las reglas de los mensajes que llegan a `main` están en `.github/scripts/check-message.sh`, el script que usan los checks `Check commit messages` y `Check PR title`. Prueba local con los mensajes límite que propuso el tutor en la review:
 
 ```bash
