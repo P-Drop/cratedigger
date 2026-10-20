@@ -2,6 +2,7 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
+[![CI](https://github.com/P-Drop/cratedigger/actions/workflows/ci.yaml/badge.svg?branch=main&event=push)](https://github.com/P-Drop/cratedigger/actions/workflows/ci.yaml?query=branch%3Amain)
 
 Crate Digger is a contribution to Hip Hop Roots and Culture.
 
@@ -24,6 +25,11 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
     - [Reset services from scratch](#reset-services-from-scratch)
     - [Check quality](#check-quality)
     - [Run tests suite](#run-tests-suite)
+- [Contribute](#contribute)
+    - [Why merge commits?](#why-merge-commits)
+    - [Protected base branch](#protected-base-branch)
+    - [Secret protection](#secret-protection)
+    - [Dependency updates](#dependency-updates)
 - [License](#license)
 
 ## Stack
@@ -40,7 +46,8 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
 | Extras | **Redis**, **Celery**, deploy | ⌛️ |
 | Quality | **uv**, **ruff** (linter and formatter), **mypy** strict with **django-stubs**, **pytest** with **pytest-django**, **pytest-cov** and **factory_boy**, **pre-commit** | ✅ |
 | Infra | **Docker** + **Compose** | ✅ |
-| CI | **GitHub Actions** | ⌛️ |
+| CI | **GitHub Actions**: quality, secret scan, unit and integration tests, combined coverage >= 85%, commit message and PR title checks | ✅ |
+| Dependencies | **Renovate** | ✅ |
 | API Client | **Bruno** | ⌛️ |
 
 
@@ -51,7 +58,7 @@ I work with Claude Code here, set up in *Learning* mode. Claude organizes and ev
 
 ### Requirements
 
-- uv v0.12.16 or later.
+- uv v0.12.19 (exact version, pinned in `pyproject.toml`).
 
     [Install uv from Astral](https://docs.astral.sh/uv/getting-started/installation/).
 
@@ -99,6 +106,12 @@ docker compose ps
 uv run python manage.py migrate
 ```
 
+6. Install pre-commit hooks:
+
+```bash
+uv run pre-commit install
+```
+
 ## Usage
 
 > This project is on an early building phase currently. Future usage options will be updated.
@@ -118,7 +131,7 @@ curl http://localhost:8000/health/
 
 ### Reset services from scratch
 
-> CAUTION: This command deletes ALL data in your local databases
+> WARNING: This command deletes ALL data in your local databases
 
 ```bash
 # Stops and deletes containers and data volumes
@@ -153,6 +166,88 @@ uv run mypy .
 uv run pytest
 ```
 
+## Contribute
+
+Contributors are welcome!
+
+Here's some info about development workflow and accepted PRs. Please, follow these steps:
+
+1. Work on a feature branch, never on `main`. Use an existing branch or create a new one like this:
+
+```bash
+# To develop a new feature
+git switch -c feat/<brief-branch-name>
+
+# To fix bugs
+git switch -c fix/<brief-branch-name>
+```
+
+2. Use atomic commits with Conventional Commits and subjects up to 72 characters. The same rules apply to the PR title. Fill in the PR body following the template and make sure you have completed all checks.
+
+3. Verify your CI run passes all checks.
+
+4. You will be notified when your PR is merged into main. Then, this branch is deleted automatically.
+
+### Why merge commits?
+
+This project merges PRs with *merge commits*. All atomic commits from a development branch reach `main`, so the history tracks progress commit by commit, while each merge commit groups a whole PR. Here, a PR usually covers a full phase, with several topics.
+
+Use `git log --first-parent` to read the history by phase, and `bisect` / `blame` for commit-level detail.
+
+Since every branch commit lands in `main`, make sure your commits are clean and follow Conventional Commits before asking for review.
+
+### Protected base branch
+
+`main` is protected by a ruleset that applies to all users, admin included:
+
+- Changes only through a PR. Direct pushes, *force push* and branch deletion are forbidden.
+
+- The branch must be up to date with `main` before merging. Update it with rebase, never with a merge:
+
+```bash
+git fetch origin
+
+git rebase origin/main
+
+git push --force-with-lease
+```
+
+- Required checks:
+    - Check code quality.
+    - Detect leaked secrets.
+    - Unit tests.
+    - Integration tests.
+    - Check coverage threshold.
+    - Check commit messages.
+    - Check PR title.
+
+- Commit messages and the PR title (the merge commit subject) follow the same rules, enforced in CI by `.github/scripts/check-message.sh`: Conventional Commits, subjects up to 72 characters, no autosquash commits (`fixup!`, `squash!`, `amend!`) and no messages starting with `Merge`. Merge commits inside the branch are rejected too.
+
+    > The local hook still accepts `fixup!` commits, so you can use `git commit --fixup` while you work. Squash them with `git rebase -i --autosquash origin/main` before pushing.
+
+- PRs from forks require admin approval before CI runs.
+
+### Secret protection
+
+1. Local gitleaks pre-commit.
+2. GitHub *push protection*.
+3. Gitleaks job over full history, which blocks merging.
+4. *Secret scanning* monitoring repository.
+
+The CI uses no secrets.
+
+### Dependency updates
+
+- Renovate reviews updates weekly.
+
+- **Dashboard approval required** for *majors* and Python version changes.
+
+- **Mongo** image stays below major version 8.
+
+- **gitleaks hash**: Manually update `GITLEAKS_SHA256` with release `checksums.txt` for each update. Renovate automatically updates `GITLEAKS_VERSION` and hook `rev`, but this PR will fail intentionally until `GITLEAKS_SHA256` is updated.
+
+- **Local uv**: Renovate automatically syncs `required-version` and hook `rev`, but this exact version must be available in local environment.
+
 ## License
 
-Distributed under the MIT license. See [LICENSE](LICENSE)
+Distributed under the MIT license. See [LICENSE](LICENSE).

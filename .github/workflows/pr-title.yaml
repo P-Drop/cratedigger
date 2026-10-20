@@ -1,0 +1,45 @@
+name: pr-title
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  UV_LOCKED: 1
+
+jobs:
+  check-pr-title:
+    name: Check PR title
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version-file: "./pyproject.toml"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Install project
+        run: uv sync
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s\n' "$PR_TITLE" > "$RUNNER_TEMP/pr-title"
+          bash .github/scripts/check-message.sh "$RUNNER_TEMP/pr-title" "PR title: $PR_TITLE"
